@@ -58,7 +58,8 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     [studies.length, track],
   );
 
-  /* auto-shrink the panel so a whole case study always fits one screen */
+  /* auto-shrink the panel so a whole case study fits one screen; on very small
+     screens stop shrinking (it would be unreadable) and scroll inside instead */
   useEffect(() => {
     const area = fitAreaRef.current;
     const content = contentRef.current;
@@ -69,7 +70,11 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       const natural = content.offsetHeight;
       const available = area.clientHeight;
       if (!natural || !available) return;
-      setFitScale(Math.min(1, Math.max(0.55, available / natural)));
+      const raw = available / natural;
+      const scale = Math.min(1, Math.max(MIN_FIT_SCALE, raw));
+      setFitScale(scale);
+      setNaturalHeight(natural);
+      setNeedsInnerScroll(raw < MIN_FIT_SCALE);
     };
 
     fit();
@@ -82,6 +87,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       window.removeEventListener("resize", fit);
     };
   }, [index]);
+
 
 
   /* pin the deck: once it enters, lock scrolling until the sequence is done */
