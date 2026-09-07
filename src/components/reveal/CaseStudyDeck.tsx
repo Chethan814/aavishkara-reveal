@@ -71,6 +71,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     const area = fitAreaRef.current;
     const content = contentRef.current;
     if (!area || !content) return;
+    area.scrollTop = 0;
 
     const fit = () => {
       /* offsetHeight ignores the current transform, so it is the natural height */
