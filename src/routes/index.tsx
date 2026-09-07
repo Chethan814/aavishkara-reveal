@@ -4,6 +4,7 @@ import { ChevronDown, Lock } from "lucide-react";
 
 import { SmoothScroll } from "@/components/reveal/SmoothScroll";
 import { Ambience } from "@/components/reveal/Ambience";
+import { SparkBurst } from "@/components/reveal/SparkBurst";
 import { ScrollProgress } from "@/components/reveal/ScrollProgress";
 import { Typewriter } from "@/components/reveal/Typewriter";
 import { CaseStudyDeck } from "@/components/reveal/CaseStudyDeck";
@@ -11,8 +12,12 @@ import { Sponsors } from "@/components/reveal/Sponsors";
 import { CustomCursor } from "@/components/reveal/CustomCursor";
 import { MagneticButton } from "@/components/reveal/MagneticButton";
 import { caseStudies } from "@/data/caseStudies";
+import { EASE, HERO_LOGO_DELAY } from "@/lib/motion";
 import akMark from "@/assets/aavishkara-ak-mark.png.asset.json";
+import trustLogo from "@/assets/soundarya-trust.png.asset.json";
+import iicLogo from "@/assets/iic-logo.png.asset.json";
 import doorway from "@/assets/doorway.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,7 +41,7 @@ export const Route = createFileRoute("/")({
   component: Reveal,
 });
 
-const EASE = [0.22, 1, 0.36, 1] as const;
+
 
 function Section({
   children,
@@ -88,11 +93,39 @@ function Reveal() {
     <main className="relative w-full overflow-x-hidden bg-background text-foreground">
       <SmoothScroll />
       <Ambience />
+      <SparkBurst />
       <ScrollProgress />
       <CustomCursor />
 
       {/* 1 — OPENING */}
       <Section>
+        {/* corner institution logos */}
+        <motion.div
+          initial={{ opacity: 0, y: 26 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: HERO_LOGO_DELAY, duration: 1.1, ease: EASE }}
+          className="absolute left-5 top-5 sm:left-10 sm:top-10"
+        >
+          <img
+            src={trustLogo.url}
+            alt="Soundarya Educational Trust"
+            className="hero-logo h-14 w-auto sm:h-20 lg:h-24"
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 26 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: HERO_LOGO_DELAY + 0.15, duration: 1.1, ease: EASE }}
+          className="absolute right-5 top-5 sm:right-10 sm:top-10"
+        >
+          <img
+            src={iicLogo.url}
+            alt="Institution's Innovation Council"
+            className="hero-logo h-10 w-auto rounded sm:h-14 lg:h-16"
+          />
+        </motion.div>
+
+
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

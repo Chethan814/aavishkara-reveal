@@ -4,10 +4,9 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { CaseStudyPanel } from "./CaseStudySection";
 import { MagneticButton } from "./MagneticButton";
-import { PortalTransition, PORTAL_SWAP, PORTAL_TOTAL } from "./PortalTransition";
+import { PortalTransition } from "./PortalTransition";
+import { EASE, PORTAL_SWAP, PORTAL_TOTAL } from "@/lib/motion";
 import type { CaseStudy } from "@/data/caseStudies";
-
-const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   const [index, setIndex] = useState(0);
@@ -17,9 +16,23 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   const indexRef = useRef(0);
   const busyRef = useRef(false);
   const inViewRef = useRef(false);
+  const timersRef = useRef<number[]>([]);
 
   indexRef.current = index;
   inViewRef.current = inView;
+
+  /* every animation timer is tracked so nothing fires after unmount */
+  const track = useCallback((id: number) => {
+    timersRef.current.push(id);
+  }, []);
+
+  useEffect(
+    () => () => {
+      timersRef.current.forEach(window.clearTimeout);
+      timersRef.current = [];
+    },
+    [],
+  );
 
   const go = useCallback(
     (dir: 1 | -1) => {
@@ -28,14 +41,18 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       if (next < 0 || next >= studies.length) return;
       busyRef.current = true;
       setTransitioning(true);
-      window.setTimeout(() => setIndex(next), PORTAL_SWAP);
-      window.setTimeout(() => {
-        setTransitioning(false);
-        busyRef.current = false;
-      }, PORTAL_TOTAL);
+      track(window.setTimeout(() => setIndex(next), PORTAL_SWAP));
+      track(
+        window.setTimeout(() => {
+          setTransitioning(false);
+          busyRef.current = false;
+          timersRef.current = [];
+        }, PORTAL_TOTAL),
+      );
     },
-    [studies.length],
+    [studies.length, track],
   );
+
 
   /* pin the deck: once it enters, lock scrolling until the sequence is done */
   useEffect(() => {
@@ -43,6 +60,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     if (!el) return;
     const lenis = () => (window as unknown as { __lenis?: any }).__lenis;
 
+    let stopTimer = 0;
     const enter = () => {
       if (inViewRef.current) return;
       setInView(true);
@@ -50,18 +68,21 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       const l = lenis();
       if (l) {
         l.scrollTo(el, { duration: 0.8, lock: true });
-        window.setTimeout(() => l.stop(), 850);
+        window.clearTimeout(stopTimer);
+        stopTimer = window.setTimeout(() => l.stop(), 850);
       } else {
         el.scrollIntoView({ behavior: "smooth" });
       }
     };
 
     const release = () => {
-      if (!inViewRef.current) return;
+      if (!inViewRef.current || busyRef.current) return;
+      window.clearTimeout(stopTimer);
       setInView(false);
       inViewRef.current = false;
       lenis()?.start();
     };
+
 
     const onScroll = () => {
       if (inViewRef.current) return;
@@ -117,7 +138,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   /* presenter remote / keyboard */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!inViewRef.current) return;
+      if (!inViewRef.current || busyRef.current) return;
       if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
         e.preventDefault();
         go(1);
@@ -136,6 +157,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     touch.current = { x: e.touches[0]?.clientX ?? 0, y: e.touches[0]?.clientY ?? 0 };
   };
   const onTouchEnd = (e: React.TouchEvent) => {
+    if (busyRef.current) return;
     const t = e.changedTouches[0];
     if (!t) return;
     const dx = t.clientX - touch.current.x;
