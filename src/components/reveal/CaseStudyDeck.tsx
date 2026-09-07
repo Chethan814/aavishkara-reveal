@@ -138,7 +138,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   /* presenter remote / keyboard */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!inViewRef.current) return;
+      if (!inViewRef.current || busyRef.current) return;
       if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
         e.preventDefault();
         go(1);
@@ -157,6 +157,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     touch.current = { x: e.touches[0]?.clientX ?? 0, y: e.touches[0]?.clientY ?? 0 };
   };
   const onTouchEnd = (e: React.TouchEvent) => {
+    if (busyRef.current) return;
     const t = e.changedTouches[0];
     if (!t) return;
     const dx = t.clientX - touch.current.x;
