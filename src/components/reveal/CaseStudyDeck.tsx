@@ -6,6 +6,7 @@ import { CaseStudyPanel } from "./CaseStudySection";
 import { MagneticButton } from "./MagneticButton";
 import { PortalTransition } from "./PortalTransition";
 import { EASE, PORTAL_SWAP, PORTAL_TOTAL } from "@/lib/motion";
+import { playSound } from "@/lib/sound";
 import type { CaseStudy } from "@/data/caseStudies";
 
 export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
@@ -40,6 +41,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       const next = indexRef.current + dir;
       if (next < 0 || next >= studies.length) return;
       busyRef.current = true;
+      playSound("portal");
       setTransitioning(true);
       track(window.setTimeout(() => setIndex(next), PORTAL_SWAP));
       track(
