@@ -1,11 +1,9 @@
 import { AnimatePresence, motion } from "motion/react";
 
-const EASE = [0.22, 1, 0.36, 1] as const;
+import { EASE, PORTAL_SWAP, PORTAL_TOTAL } from "@/lib/motion";
 
-/** Total duration of the portal transition in ms. */
-export const PORTAL_TOTAL = 2200;
-/** Point at which the underlying content is swapped (peak of the light burst). */
-export const PORTAL_SWAP = 1100;
+export { PORTAL_SWAP, PORTAL_TOTAL };
+
 
 export function PortalTransition({ active }: { active: boolean }) {
   return (
