@@ -240,14 +240,19 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
             : { scale: 1, opacity: 1, filter: "blur(0px)" }
         }
         transition={{ duration: transitioning ? 0.3 : 0.7, ease: EASE }}
-        className="flex min-h-0 w-full flex-1 items-center justify-center"
+        className={`flex min-h-0 w-full flex-1 justify-center ${
+          needsInnerScroll ? "items-start overflow-y-auto" : "items-center overflow-hidden"
+        }`}
       >
         <AnimatePresence mode="wait">
           <div
             key={index}
             ref={contentRef}
-            className="w-full origin-center"
-            style={{ transform: `scale(${fitScale})` }}
+            className="w-full origin-top"
+            style={{
+              transform: `scale(${fitScale})`,
+              marginBottom: -naturalHeight * (1 - fitScale),
+            }}
           >
             <CaseStudyPanel study={study} index={index} />
           </div>
