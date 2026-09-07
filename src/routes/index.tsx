@@ -8,6 +8,8 @@ import { ScrollProgress } from "@/components/reveal/ScrollProgress";
 import { Typewriter } from "@/components/reveal/Typewriter";
 import { CaseStudyDeck } from "@/components/reveal/CaseStudyDeck";
 import { Sponsors } from "@/components/reveal/Sponsors";
+import { CustomCursor } from "@/components/reveal/CustomCursor";
+import { MagneticButton } from "@/components/reveal/MagneticButton";
 import { caseStudies } from "@/data/caseStudies";
 import akMark from "@/assets/aavishkara-ak-mark.png.asset.json";
 import doorway from "@/assets/doorway.jpg";
@@ -74,11 +76,20 @@ function IBMWordmark() {
 }
 
 function Reveal() {
+  const beginStudies = () => {
+    const deck = document.getElementById("case-deck");
+    if (!deck) return;
+    const lenis = (window as unknown as { __lenis?: { scrollTo: (target: Element, options?: object) => void } }).__lenis;
+    if (lenis) lenis.scrollTo(deck, { duration: 1.1 });
+    else deck.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <main className="relative w-full overflow-x-hidden bg-background text-foreground">
       <SmoothScroll />
       <Ambience />
       <ScrollProgress />
+      <CustomCursor />
 
       {/* 1 — OPENING */}
       <Section>
@@ -95,7 +106,7 @@ function Reveal() {
           initial={{ opacity: 0, filter: "blur(18px)", scale: 0.96 }}
           animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
           transition={{ delay: 0.9, duration: 2.2, ease: EASE }}
-          className="display text-glow-gold text-5xl leading-[0.92] text-primary sm:text-7xl md:text-8xl lg:text-9xl"
+          className="mouse-depth display text-glow-gold text-5xl leading-[0.92] text-primary sm:text-7xl md:text-8xl lg:text-9xl"
         >
           <img
             src={akMark.url}
@@ -231,7 +242,8 @@ function Reveal() {
           The Case Studies
         </motion.p>
 
-        <div className="relative w-full max-w-5xl">
+        <div className="mouse-depth relative w-full max-w-5xl">
+          <div aria-hidden className="title-grid-scan absolute -inset-32" />
           {/* gold light sweep */}
           <motion.div
             aria-hidden
@@ -242,15 +254,19 @@ function Reveal() {
             className="absolute inset-y-0 left-0 z-20 w-40 bg-gradient-to-r from-transparent via-primary to-transparent blur-md"
           />
 
-          <motion.h2
-            initial={{ clipPath: "inset(0 100% 0 0)", opacity: 0.2 }}
-            whileInView={{ clipPath: "inset(0 0% 0 0)", opacity: 1 }}
-            viewport={{ once: true, amount: 0.6 }}
-            transition={{ duration: 1.6, delay: 0.35, ease: EASE }}
-            className="display text-glow-gold text-4xl leading-[0.95] text-primary sm:text-6xl md:text-7xl"
-          >
-            Twelve Problems.
-          </motion.h2>
+          <h2 className="display text-glow-gold text-4xl leading-[0.95] text-primary sm:text-6xl md:text-7xl" aria-label="Twelve Problems">
+            {"Twelve Problems.".split("").map((letter, index) => (
+              <motion.span
+                key={`${letter}-${index}`}
+                initial={{ opacity: 0, filter: "brightness(3) blur(8px)" }}
+                whileInView={{ opacity: [0, 1, 0.45, 1], filter: "brightness(1) blur(0px)" }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.45, delay: 0.25 + index * 0.045, ease: EASE }}
+              >
+                {letter === " " ? "\u00a0" : letter}
+              </motion.span>
+            ))}
+          </h2>
 
           <motion.h3
             initial={{ clipPath: "inset(0 100% 0 0)", opacity: 0 }}
@@ -262,14 +278,39 @@ function Reveal() {
             One Weekend to Answer Them.
           </motion.h3>
 
-
           <motion.div
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true, amount: 0.6 }}
             transition={{ duration: 1.4, delay: 1.3, ease: EASE }}
-            className="mx-auto mt-10 h-px w-full max-w-xl bg-gradient-to-r from-transparent via-accent to-transparent shadow-[var(--glow-neon)]"
+            className="title-divider mx-auto mt-10 h-px w-full max-w-xl bg-gradient-to-r from-transparent via-primary to-transparent shadow-[var(--glow-gold)]"
           />
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.6, delay: 1.55, ease: EASE }}
+            className="mt-9 flex flex-col items-center gap-6"
+          >
+            <div className="flex items-center gap-3" aria-label="12 challenges ahead">
+              {Array.from({ length: 12 }, (_, index) => (
+                <motion.span
+                  key={index}
+                  initial={{ scaleY: 0, opacity: 0 }}
+                  whileInView={{ scaleY: 1, opacity: index % 3 === 0 ? 1 : 0.45 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.35, delay: 1.6 + index * 0.045, ease: EASE }}
+                  className="h-5 w-px origin-bottom bg-primary"
+                />
+              ))}
+              <span className="display ml-3 text-xs tracking-[0.38em] text-foreground/70 sm:text-sm">12 Challenges Ahead</span>
+            </div>
+            <MagneticButton onClick={beginStudies} ariaLabel="Begin the case studies">
+              Begin
+              <ChevronDown className="h-5 w-5" />
+            </MagneticButton>
+          </motion.div>
         </div>
       </Section>
 

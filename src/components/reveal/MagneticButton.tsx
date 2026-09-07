@@ -45,12 +45,13 @@ export function MagneticButton({
       onMouseLeave={() => setOffset({ x: 0, y: 0 })}
       animate={{ x: offset.x, y: offset.y }}
       transition={{ type: "spring", stiffness: 220, damping: 18 }}
-      className={`relative inline-flex items-center gap-3 rounded-full uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${base} ${className}`}
+      className={`portal-button relative inline-flex items-center gap-3 overflow-hidden rounded-full uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${base} ${className}`}
       style={{
         animation: variant === "primary" ? "btn-pulse 2.6s ease-in-out infinite" : "none",
       }}
     >
-      {children}
+      <span aria-hidden className="button-light-sweep" />
+      <span className="relative z-10 inline-flex items-center gap-3">{children}</span>
     </motion.button>
   );
 }
