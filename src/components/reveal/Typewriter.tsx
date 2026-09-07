@@ -24,6 +24,7 @@ export function Typewriter({
             clearInterval(interval);
             return c;
           }
+          playSound("type");
           return c + 1;
         });
       }, speed);

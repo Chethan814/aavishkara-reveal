@@ -41,8 +41,15 @@ export function MagneticButton({
       ref={ref}
       type="button"
       aria-label={ariaLabel}
-      onClick={onClick}
+      onClick={() => {
+        if (disabled) return;
+        playSound("click");
+        onClick();
+      }}
       disabled={disabled}
+      onMouseEnter={() => {
+        if (!disabled) playSound("hover");
+      }}
       onMouseMove={handleMove}
       onMouseLeave={() => setOffset({ x: 0, y: 0 })}
       animate={{ x: offset.x, y: offset.y }}
