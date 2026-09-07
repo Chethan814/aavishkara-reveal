@@ -183,17 +183,18 @@ function Reveal() {
       {/* 2 — SPONSOR CREDIT */}
       <Section>
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 24, filter: "blur(14px)", scale: 0.96 }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }}
           viewport={{ once: true, amount: 0.6 }}
           transition={{ duration: 1.6, ease: EASE }}
           className="flex flex-col items-center"
         >
-          <IBMWordmark />
-          <div className="mt-10 h-px w-24 bg-border" />
-          <p className="display mt-8 text-[0.65rem] tracking-[0.45em] text-muted-foreground sm:text-sm">
-            Case Study Presented By
-          </p>
+          <img
+            src={titleCard.url}
+            alt="Aavishkara '26"
+            className="w-[min(92vw,48rem)] sm:w-[min(88vw,58rem)] lg:w-[min(82vw,68rem)]"
+            style={{ filter: "drop-shadow(0 0 44px rgba(245,184,0,0.22))" }}
+          />
         </motion.div>
 
         <Sponsors />
