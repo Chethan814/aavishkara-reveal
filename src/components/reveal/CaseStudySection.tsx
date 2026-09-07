@@ -37,7 +37,7 @@ export function CaseStudyPanel({ study, index }: { study: CaseStudy; index: numb
         initial={{ opacity: 0, y: 28, filter: "blur(10px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
         transition={{ duration: 0.6, ease: EASE }}
-        className="display text-glow-gold mt-4 text-4xl leading-[1] text-primary sm:text-6xl lg:text-7xl"
+        className="display text-glow-gold mt-3 text-3xl leading-[1] text-primary sm:text-5xl lg:text-6xl"
       >
         <span className="text-gold-soft/70">{pad(index + 1)}</span>{" "}
         <span>{study.title}</span>
@@ -47,7 +47,7 @@ export function CaseStudyPanel({ study, index }: { study: CaseStudy; index: numb
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.18, ease: EASE }}
-        className="mt-8 max-w-4xl"
+        className="mt-6 max-w-4xl"
       >
         <h3 className="display text-sm tracking-[0.4em] text-primary sm:text-base">Context</h3>
         <p className="mt-3 text-lg leading-relaxed text-foreground/85 sm:text-xl">
@@ -59,7 +59,7 @@ export function CaseStudyPanel({ study, index }: { study: CaseStudy; index: numb
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.26, ease: EASE }}
-        className="mt-8 max-w-4xl border-l-4 border-primary bg-card/70 py-5 pl-6 pr-5 shadow-[0_0_60px_-30px_var(--gold)]"
+        className="mt-6 max-w-4xl border-l-4 border-primary bg-card/70 py-5 pl-6 pr-5 shadow-[0_0_60px_-30px_var(--gold)]"
       >
         <h3 className="display text-sm tracking-[0.4em] text-primary sm:text-base">
           Problem Statement
@@ -67,7 +67,7 @@ export function CaseStudyPanel({ study, index }: { study: CaseStudy; index: numb
         <p className="mt-3 text-xl leading-relaxed text-foreground sm:text-2xl">{study.problem}</p>
       </motion.div>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <motion.h3
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -92,7 +92,7 @@ export function CaseStudyPanel({ study, index }: { study: CaseStudy; index: numb
         </ul>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <motion.h3
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
