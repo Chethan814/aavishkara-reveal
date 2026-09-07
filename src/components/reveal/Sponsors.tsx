@@ -12,7 +12,7 @@ const partners = [
 
 export function Sponsors() {
   return (
-    <div className="mt-20 flex w-full max-w-6xl flex-col items-center">
+    <div className="mt-20 flex w-full max-w-[1500px] flex-col items-center">
       <motion.p
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
