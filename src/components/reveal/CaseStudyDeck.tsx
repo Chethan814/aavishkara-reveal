@@ -26,9 +26,11 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   const busyRef = useRef(false);
   const inViewRef = useRef(false);
   const timersRef = useRef<number[]>([]);
+  const needsScrollRef = useRef(false);
 
   indexRef.current = index;
   inViewRef.current = inView;
+  needsScrollRef.current = needsInnerScroll;
 
   /* every animation timer is tracked so nothing fires after unmount */
   const track = useCallback((id: number) => {
