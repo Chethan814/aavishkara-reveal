@@ -205,7 +205,7 @@ function Reveal() {
           transition={{ duration: 1, ease: EASE }}
           className="display mb-10 text-[0.6rem] tracking-[0.5em] text-accent sm:text-xs"
         >
-          The Case Study
+          The Case Studies
         </motion.p>
 
         <div className="relative w-full max-w-5xl">
@@ -226,7 +226,7 @@ function Reveal() {
             transition={{ duration: 1.6, delay: 0.35, ease: EASE }}
             className="display text-glow-gold text-4xl leading-[0.95] text-primary sm:text-6xl md:text-7xl"
           >
-            Bridging the Last Mile
+            Twelve Problems.
           </motion.h2>
 
           <motion.h3
@@ -234,10 +234,11 @@ function Reveal() {
             whileInView={{ clipPath: "inset(0 0% 0 0)", opacity: 1 }}
             viewport={{ once: true, amount: 0.6 }}
             transition={{ duration: 1.5, delay: 0.9, ease: EASE }}
-            className="display mt-6 text-lg leading-tight text-foreground/85 sm:text-2xl"
+            className="display mt-6 text-xl leading-tight text-foreground/85 sm:text-3xl"
           >
-            AI for Inclusive Public Services
+            One Weekend to Answer Them.
           </motion.h3>
+
 
           <motion.div
             initial={{ scaleX: 0 }}
