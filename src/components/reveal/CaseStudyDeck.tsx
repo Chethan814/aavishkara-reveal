@@ -245,7 +245,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       id="case-deck"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
-      className="relative z-10 flex h-screen w-full flex-col justify-center overflow-hidden px-6 py-12 sm:px-10 lg:px-20"
+      className="relative z-10 flex h-screen w-full flex-col justify-center overflow-hidden px-6 pb-12 pt-24 sm:px-10 sm:py-12 lg:px-20"
     >
       <PortalTransition active={transitioning} />
 
