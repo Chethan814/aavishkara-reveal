@@ -46,11 +46,9 @@ export function MagneticButton({
       animate={{ x: offset.x, y: offset.y }}
       transition={{ type: "spring", stiffness: 220, damping: 18 }}
       className={`relative inline-flex items-center gap-3 rounded-full uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${base} ${className}`}
-      style={
-        variant === "primary"
-          ? { animation: "btn-pulse 2.6s ease-in-out infinite" }
-          : undefined
-      }
+      style={{
+        animation: variant === "primary" ? "btn-pulse 2.6s ease-in-out infinite" : "none",
+      }}
     >
       {children}
     </motion.button>
