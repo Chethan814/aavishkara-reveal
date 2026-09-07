@@ -9,11 +9,16 @@ import { EASE, PORTAL_SWAP, PORTAL_TOTAL } from "@/lib/motion";
 import { playSound } from "@/lib/sound";
 import type { CaseStudy } from "@/data/caseStudies";
 
+/* below this the text would be unreadable, so we scroll inside instead */
+const MIN_FIT_SCALE = 0.72;
+
 export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   const [index, setIndex] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
   const [inView, setInView] = useState(false);
   const [fitScale, setFitScale] = useState(1);
+  const [naturalHeight, setNaturalHeight] = useState(0);
+  const [needsInnerScroll, setNeedsInnerScroll] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const fitAreaRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
