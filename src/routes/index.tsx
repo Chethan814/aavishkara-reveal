@@ -100,23 +100,31 @@ function Reveal() {
       {/* 1 — OPENING */}
       <Section>
         {/* corner institution logos */}
-        <motion.img
-          src={trustLogo.url}
-          alt="Soundarya Educational Trust"
+        <motion.div
           initial={{ opacity: 0, y: 26 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: HERO_LOGO_DELAY, duration: 1.1, ease: EASE }}
-          className="absolute left-5 top-5 h-14 w-auto sm:left-10 sm:top-10 sm:h-20 lg:h-24"
+          className="absolute left-5 top-5 sm:left-10 sm:top-10"
         >
-        </motion.img>
-        <motion.img
-          src={iicLogo.url}
-          alt="Institution's Innovation Council"
+          <img
+            src={trustLogo.url}
+            alt="Soundarya Educational Trust"
+            className="hero-logo h-14 w-auto sm:h-20 lg:h-24"
+          />
+        </motion.div>
+        <motion.div
           initial={{ opacity: 0, y: 26 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: HERO_LOGO_DELAY + 0.15, duration: 1.1, ease: EASE }}
-          className="absolute right-5 top-5 h-10 w-auto rounded sm:right-10 sm:top-10 sm:h-14 lg:h-16"
-        />
+          className="absolute right-5 top-5 sm:right-10 sm:top-10"
+        >
+          <img
+            src={iicLogo.url}
+            alt="Institution's Innovation Council"
+            className="hero-logo h-10 w-auto rounded sm:h-14 lg:h-16"
+          />
+        </motion.div>
+
 
         <motion.p
           initial={{ opacity: 0 }}
