@@ -135,6 +135,20 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     const onWheel = (e: WheelEvent) => {
       if (!inViewRef.current) return;
       const down = e.deltaY > 0;
+
+      /* when the panel is taller than the screen, the wheel scrolls it first */
+      const area = fitAreaRef.current;
+      if (needsScrollRef.current && area) {
+        const atTop = area.scrollTop <= 0;
+        const atBottom = area.scrollTop + area.clientHeight >= area.scrollHeight - 1;
+        if ((down && !atBottom) || (!down && !atTop)) {
+          e.preventDefault();
+          e.stopPropagation();
+          area.scrollTop += e.deltaY;
+          return;
+        }
+      }
+
       const canLeave =
         (down && indexRef.current === studies.length - 1) ||
         (!down && indexRef.current === 0);
@@ -146,6 +160,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
         e.stopPropagation();
       }
     };
+
 
     let startY = 0;
     const onTouchStart = (e: TouchEvent) => {
