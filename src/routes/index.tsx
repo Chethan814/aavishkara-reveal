@@ -15,6 +15,7 @@ import { MagneticButton } from "@/components/reveal/MagneticButton";
 import { caseStudies } from "@/data/caseStudies";
 import { EASE, HERO_LOGO_DELAY } from "@/lib/motion";
 import titleCard from "@/assets/aavishkara-title-card.png.asset.json";
+import akMark from "@/assets/aavishkara-ak-mark.png.asset.json";
 import trustLogo from "@/assets/soundarya-trust.png.asset.json";
 import iicLogo from "@/assets/iic-logo.png.asset.json";
 import doorway from "@/assets/doorway.jpg";
@@ -192,10 +193,10 @@ function Reveal() {
           className="flex flex-col items-center"
         >
           <img
-            src={titleCard.url}
-            alt="Aavishkara '26"
-            className="w-[min(92vw,48rem)] sm:w-[min(88vw,58rem)] lg:w-[min(82vw,68rem)]"
-            style={{ filter: "drop-shadow(0 0 44px rgba(245,184,0,0.22))" }}
+            src={akMark.url}
+            alt="Aavishkara AK monogram"
+            className="w-28 sm:w-36 lg:w-44"
+            style={{ filter: "drop-shadow(0 0 40px rgba(245,184,0,0.35))" }}
           />
         </motion.div>
 
