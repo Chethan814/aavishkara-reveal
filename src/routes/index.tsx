@@ -9,6 +9,7 @@ import { Typewriter } from "@/components/reveal/Typewriter";
 import { CaseStudySection, SectionDivider } from "@/components/reveal/CaseStudySection";
 import { DeckProgress } from "@/components/reveal/DeckProgress";
 import { caseStudies } from "@/data/caseStudies";
+import akMark from "@/assets/aavishkara-ak-mark.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -96,7 +97,13 @@ function Reveal() {
           transition={{ delay: 0.9, duration: 2.2, ease: EASE }}
           className="display text-glow-gold text-5xl leading-[0.92] text-primary sm:text-7xl md:text-8xl lg:text-9xl"
         >
-          Aavishkara <span className="text-gold-soft">&rsquo;26</span>
+          <img
+            src={akMark.url}
+            alt="A"
+            className="inline-block h-[3rem] w-auto align-middle sm:h-[4.5rem] md:h-[6rem] lg:h-[8rem]"
+            style={{ filter: "drop-shadow(0 0 18px rgba(245,184,0,0.55))" }}
+          />
+          avishkara <span className="text-gold-soft">&rsquo;26</span>
         </motion.h1>
 
         <motion.div
