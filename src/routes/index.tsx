@@ -41,7 +41,7 @@ export const Route = createFileRoute("/")({
   component: Reveal,
 });
 
-const EASE = [0.22, 1, 0.36, 1] as const;
+
 
 function Section({
   children,
