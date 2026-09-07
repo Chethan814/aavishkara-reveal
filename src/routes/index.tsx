@@ -77,6 +77,7 @@ function Reveal() {
       <SmoothScroll />
       <Ambience />
       <ScrollProgress />
+      <DeckProgress total={caseStudies.length} />
 
       {/* 1 — OPENING */}
       <Section>
@@ -295,42 +296,5 @@ function Reveal() {
         </motion.div>
       </Section>
     </main>
-  );
-}
-
-function Divider() {
-  return (
-    <motion.div
-      initial={{ scaleX: 0, opacity: 0 }}
-      whileInView={{ scaleX: 1, opacity: 1 }}
-      viewport={{ once: true, amount: 0.8 }}
-      transition={{ duration: 1.1, ease: EASE }}
-      className="my-14 h-px w-full bg-gradient-to-r from-transparent via-accent/60 to-transparent"
-    />
-  );
-}
-
-function Block({
-  label,
-  children,
-  delay = 0,
-}: {
-  label: string;
-  children: React.ReactNode;
-  delay?: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.25 }}
-      transition={{ duration: 1.1, delay, ease: EASE }}
-      className="text-left"
-    >
-      <h3 className="display mb-5 text-[0.65rem] tracking-[0.45em] text-primary">{label}</h3>
-      <div className="space-y-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
-        {children}
-      </div>
-    </motion.div>
   );
 }
