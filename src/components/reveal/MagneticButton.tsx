@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { motion } from "motion/react";
 
+import { playSound } from "@/lib/sound";
+
 export function MagneticButton({
   children,
   onClick,
