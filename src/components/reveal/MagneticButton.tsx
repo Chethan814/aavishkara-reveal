@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { motion } from "motion/react";
 
+import { playSound } from "@/lib/sound";
+
 export function MagneticButton({
   children,
   onClick,
@@ -39,8 +41,15 @@ export function MagneticButton({
       ref={ref}
       type="button"
       aria-label={ariaLabel}
-      onClick={onClick}
+      onClick={() => {
+        if (disabled) return;
+        playSound("click");
+        onClick();
+      }}
       disabled={disabled}
+      onMouseEnter={() => {
+        if (!disabled) playSound("hover");
+      }}
       onMouseMove={handleMove}
       onMouseLeave={() => setOffset({ x: 0, y: 0 })}
       animate={{ x: offset.x, y: offset.y }}

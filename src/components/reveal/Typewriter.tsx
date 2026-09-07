@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { playSound } from "@/lib/sound";
+
 export function Typewriter({
   text,
   delay = 0,
@@ -22,6 +24,7 @@ export function Typewriter({
             clearInterval(interval);
             return c;
           }
+          playSound("type");
           return c + 1;
         });
       }, speed);
