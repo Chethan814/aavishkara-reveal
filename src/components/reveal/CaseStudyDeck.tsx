@@ -58,6 +58,31 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     [studies.length, track],
   );
 
+  /* auto-shrink the panel so a whole case study always fits one screen */
+  useEffect(() => {
+    const area = fitAreaRef.current;
+    const content = contentRef.current;
+    if (!area || !content) return;
+
+    const fit = () => {
+      /* offsetHeight ignores the current transform, so it is the natural height */
+      const natural = content.offsetHeight;
+      const available = area.clientHeight;
+      if (!natural || !available) return;
+      setFitScale(Math.min(1, Math.max(0.55, available / natural)));
+    };
+
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(area);
+    ro.observe(content);
+    window.addEventListener("resize", fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", fit);
+    };
+  }, [index]);
+
 
   /* pin the deck: once it enters, lock scrolling until the sequence is done */
   useEffect(() => {
