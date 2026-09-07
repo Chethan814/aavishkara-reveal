@@ -4,10 +4,9 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { CaseStudyPanel } from "./CaseStudySection";
 import { MagneticButton } from "./MagneticButton";
-import { PortalTransition, PORTAL_SWAP, PORTAL_TOTAL } from "./PortalTransition";
+import { PortalTransition } from "./PortalTransition";
+import { EASE, PORTAL_SWAP, PORTAL_TOTAL } from "@/lib/motion";
 import type { CaseStudy } from "@/data/caseStudies";
-
-const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   const [index, setIndex] = useState(0);
@@ -17,9 +16,23 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   const indexRef = useRef(0);
   const busyRef = useRef(false);
   const inViewRef = useRef(false);
+  const timersRef = useRef<number[]>([]);
 
   indexRef.current = index;
   inViewRef.current = inView;
+
+  /* every animation timer is tracked so nothing fires after unmount */
+  const track = useCallback((id: number) => {
+    timersRef.current.push(id);
+  }, []);
+
+  useEffect(
+    () => () => {
+      timersRef.current.forEach(window.clearTimeout);
+      timersRef.current = [];
+    },
+    [],
+  );
 
   const go = useCallback(
     (dir: 1 | -1) => {
@@ -28,14 +41,18 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       if (next < 0 || next >= studies.length) return;
       busyRef.current = true;
       setTransitioning(true);
-      window.setTimeout(() => setIndex(next), PORTAL_SWAP);
-      window.setTimeout(() => {
-        setTransitioning(false);
-        busyRef.current = false;
-      }, PORTAL_TOTAL);
+      track(window.setTimeout(() => setIndex(next), PORTAL_SWAP));
+      track(
+        window.setTimeout(() => {
+          setTransitioning(false);
+          busyRef.current = false;
+          timersRef.current = [];
+        }, PORTAL_TOTAL),
+      );
     },
-    [studies.length],
+    [studies.length, track],
   );
+
 
   /* pin the deck: once it enters, lock scrolling until the sequence is done */
   useEffect(() => {
