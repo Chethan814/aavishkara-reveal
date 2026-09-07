@@ -172,12 +172,22 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       if (!inViewRef.current) return;
       const y = e.touches[0]?.clientY ?? 0;
       const down = startY - y > 0;
+
+      /* let a tall panel scroll under the finger before leaving the deck */
+      const area = fitAreaRef.current;
+      if (needsScrollRef.current && area) {
+        const atTop = area.scrollTop <= 0;
+        const atBottom = area.scrollTop + area.clientHeight >= area.scrollHeight - 1;
+        if ((down && !atBottom) || (!down && !atTop)) return;
+      }
+
       const canLeave =
         (down && indexRef.current === studies.length - 1) ||
         (!down && indexRef.current === 0);
       if (canLeave && Math.abs(startY - y) > 80) release();
       else e.preventDefault();
     };
+
 
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("wheel", onWheel, { passive: false, capture: true });
