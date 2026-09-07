@@ -6,6 +6,9 @@ import { SmoothScroll } from "@/components/reveal/SmoothScroll";
 import { Ambience } from "@/components/reveal/Ambience";
 import { ScrollProgress } from "@/components/reveal/ScrollProgress";
 import { Typewriter } from "@/components/reveal/Typewriter";
+import { CaseStudySection, SectionDivider } from "@/components/reveal/CaseStudySection";
+import { DeckProgress } from "@/components/reveal/DeckProgress";
+import { caseStudies } from "@/data/caseStudies";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -246,68 +249,14 @@ function Reveal() {
         </div>
       </Section>
 
-      {/* 5 — CASE STUDY CONTENT */}
-      <section className="relative z-10 mx-auto w-full max-w-3xl px-6 py-28 sm:py-36">
-        <Block delay={0} label="Context">
-          <p>
-            Millions of citizens are eligible for public welfare schemes, healthcare
-            entitlements and skilling programs they never claim. The information exists, but
-            it is scattered across portals, written in dense bureaucratic language, and rarely
-            available in the language or format the citizen actually uses.
-          </p>
-        </Block>
+      {/* 5 — THE 12 CASE STUDIES */}
+      {caseStudies.map((study, i) => (
+        <div key={study.title}>
+          <CaseStudySection study={study} index={i} />
+          <SectionDivider />
+        </div>
+      ))}
 
-        <Divider />
-
-        <Block delay={0.05} label="Problem Statement">
-          <p className="text-base text-foreground sm:text-lg">
-            Design and build an AI-powered solution that helps an underserved citizen discover,
-            understand and act on the public services they are entitled to — in their own
-            language, on a low-end device, with minimal digital literacy assumed.
-          </p>
-        </Block>
-
-        <Divider />
-
-        <Block delay={0.05} label="Requirements &amp; Constraints">
-          <ul className="space-y-3">
-            {[
-              "Works on low bandwidth and entry-level smartphones; a graceful offline or lightweight mode is a plus.",
-              "Supports at least two Indian languages, including one non-English input mode (voice or vernacular text).",
-              "Explains eligibility in plain language — never just a raw document dump.",
-              "Handles sensitive personal data responsibly; no unnecessary collection or storage.",
-              "Must be a working prototype, not slideware. Show the flow end to end.",
-              "Any AI model or API may be used, but the team must justify the choice.",
-            ].map((item) => (
-              <li key={item} className="flex gap-3">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </Block>
-
-        <Divider />
-
-        <Block delay={0.05} label="Evaluation Focus">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              ["Real-world impact", "Does it genuinely help the person it claims to help?"],
-              ["Technical depth", "Quality of the build, the model use and the architecture."],
-              ["Usability", "Can a first-time user complete the journey unaided?"],
-              ["Originality", "A fresh angle beats a polished clone."],
-            ].map(([title, body]) => (
-              <div
-                key={title}
-                className="rounded-md border border-border bg-card/60 p-5 text-left shadow-[0_0_40px_-24px_var(--neon)]"
-              >
-                <h4 className="display text-xs tracking-[0.25em] text-accent">{title}</h4>
-                <p className="mt-2 text-sm text-muted-foreground">{body}</p>
-              </div>
-            ))}
-          </div>
-        </Block>
-      </section>
 
       {/* 6 — CLOSING */}
       <Section>
