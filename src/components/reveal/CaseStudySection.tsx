@@ -2,7 +2,6 @@ import { motion } from "motion/react";
 import type { CaseStudy } from "@/data/caseStudies";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-const VIEW = { once: true, amount: 0.25 } as const;
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -13,8 +12,7 @@ export function SectionDivider() {
     <motion.div
       aria-hidden
       initial={{ scaleX: 0, opacity: 0 }}
-      whileInView={{ scaleX: 1, opacity: 1 }}
-      viewport={{ once: true, amount: 0.6 }}
+      animate={{ scaleX: 1, opacity: 1 }}
       transition={{ duration: 0.9, ease: EASE }}
       style={{ transformOrigin: "left" }}
       className="mx-auto h-px w-full max-w-6xl bg-gradient-to-r from-transparent via-primary to-transparent shadow-[var(--glow-gold)]"
@@ -22,131 +20,117 @@ export function SectionDivider() {
   );
 }
 
-export function CaseStudySection({ study, index }: { study: CaseStudy; index: number }) {
+/** A single case study, animated in on mount (used by the button-driven deck). */
+export function CaseStudyPanel({ study, index }: { study: CaseStudy; index: number }) {
   return (
-    <section
-      id={`case-${pad(index + 1)}`}
-      className="relative z-10 flex min-h-screen w-full items-center px-6 py-20 sm:px-10 lg:px-20"
-    >
-      <div className="mx-auto w-full max-w-6xl">
-        <motion.p
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={VIEW}
-          transition={{ duration: 0.45, ease: EASE }}
-          className="display text-sm tracking-[0.5em] text-accent sm:text-base"
+    <div className="mx-auto w-full max-w-6xl">
+      <motion.p
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: EASE }}
+        className="display text-sm tracking-[0.5em] text-accent sm:text-base"
+      >
+        {study.category}
+      </motion.p>
+
+      <motion.h2
+        initial={{ opacity: 0, y: 28, filter: "blur(10px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.6, ease: EASE }}
+        className="display text-glow-gold mt-3 text-3xl leading-[1] text-primary sm:text-5xl lg:text-6xl"
+      >
+        <span className="text-gold-soft/70">{pad(index + 1)}</span>{" "}
+        <span>{study.title}</span>
+      </motion.h2>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.18, ease: EASE }}
+        className="mt-6 max-w-4xl"
+      >
+        <h3 className="display text-sm tracking-[0.4em] text-primary sm:text-base">Context</h3>
+        <p className="mt-3 text-lg leading-relaxed text-foreground/85 sm:text-xl">
+          {study.context}
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.26, ease: EASE }}
+        className="mt-6 max-w-4xl border-l-4 border-primary bg-card/70 py-5 pl-6 pr-5 shadow-[0_0_60px_-30px_var(--gold)]"
+      >
+        <h3 className="display text-sm tracking-[0.4em] text-primary sm:text-base">
+          Problem Statement
+        </h3>
+        <p className="mt-3 text-xl leading-relaxed text-foreground sm:text-2xl">{study.problem}</p>
+      </motion.div>
+
+      <div className="mt-6">
+        <motion.h3
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.32 }}
+          className="display text-sm tracking-[0.4em] text-primary sm:text-base"
         >
-          {study.category}
-        </motion.p>
+          Requirements &amp; Constraints
+        </motion.h3>
+        <ul className="mt-4 grid gap-3 lg:grid-cols-2">
+          {study.requirements.map((item, i) => (
+            <motion.li
+              key={item}
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.45, delay: 0.36 + i * 0.06, ease: EASE }}
+              className="flex gap-3 text-lg leading-relaxed text-foreground/85 sm:text-xl"
+            >
+              <span className="mt-3 h-2 w-2 shrink-0 rounded-full bg-primary" />
+              <span>{item}</span>
+            </motion.li>
+          ))}
+        </ul>
+      </div>
 
-        <motion.h2
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={VIEW}
-          transition={{ duration: 0.55, delay: 0.06, ease: EASE }}
-          className="display text-glow-gold mt-5 text-4xl leading-[1] text-primary sm:text-6xl lg:text-7xl"
+      <div className="mt-6">
+        <motion.h3
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.42 }}
+          className="display text-sm tracking-[0.4em] text-primary sm:text-base"
         >
-          <span className="text-gold-soft/70">{pad(index + 1)}</span>{" "}
-          <span>{study.title}</span>
-        </motion.h2>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={VIEW}
-          transition={{ duration: 0.5, delay: 0.16, ease: EASE }}
-          className="mt-10 max-w-4xl"
-        >
-          <h3 className="display text-sm tracking-[0.4em] text-primary sm:text-base">Context</h3>
-          <p className="mt-3 text-lg leading-relaxed text-foreground/85 sm:text-xl">
-            {study.context}
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={VIEW}
-          transition={{ duration: 0.5, delay: 0.24, ease: EASE }}
-          className="mt-10 max-w-4xl border-l-4 border-primary bg-card/70 py-5 pl-6 pr-5 shadow-[0_0_60px_-30px_var(--gold)]"
-        >
-          <h3 className="display text-sm tracking-[0.4em] text-primary sm:text-base">
-            Problem Statement
-          </h3>
-          <p className="mt-3 text-xl leading-relaxed text-foreground sm:text-2xl">
-            {study.problem}
-          </p>
-        </motion.div>
-
-        <div className="mt-10">
-          <motion.h3
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={VIEW}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="display text-sm tracking-[0.4em] text-primary sm:text-base"
-          >
-            Requirements &amp; Constraints
-          </motion.h3>
-          <ul className="mt-4 grid gap-3 lg:grid-cols-2">
-            {study.requirements.map((item, i) => (
-              <motion.li
-                key={item}
-                initial={{ opacity: 0, x: -16 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={VIEW}
-                transition={{ duration: 0.45, delay: 0.34 + i * 0.07, ease: EASE }}
-                className="flex gap-3 text-lg leading-relaxed text-foreground/85 sm:text-xl"
-              >
-                <span className="mt-3 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                <span>{item}</span>
-              </motion.li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="mt-10">
-          <motion.h3
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={VIEW}
-            transition={{ duration: 0.4, delay: 0.4 }}
-            className="display text-sm tracking-[0.4em] text-primary sm:text-base"
-          >
-            Evaluation Focus
-          </motion.h3>
-          <div className="mt-4 grid gap-5 md:grid-cols-2">
-            {[
-              ["Real-World Impact", study.impact],
-              ["Technical Depth", study.technical],
-            ].map(([title, points], i) => (
-              <motion.div
-                key={title as string}
-                initial={{ opacity: 0, y: 22 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={VIEW}
-                transition={{ duration: 0.5, delay: 0.46 + i * 0.08, ease: EASE }}
-                className="rounded-md border border-accent/40 bg-card/60 p-6 shadow-[0_0_70px_-30px_var(--neon)]"
-              >
-                <h4 className="display text-sm tracking-[0.3em] text-accent sm:text-base">
-                  {title as string}
-                </h4>
-                <ul className="mt-3 space-y-2">
-                  {(points as string[]).map((p) => (
-                    <li
-                      key={p}
-                      className="flex gap-3 text-base leading-relaxed text-foreground/85 sm:text-lg"
-                    >
-                      <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                      <span>{p}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            ))}
-          </div>
+          Evaluation Focus
+        </motion.h3>
+        <div className="mt-4 grid gap-5 md:grid-cols-2">
+          {[
+            ["Real-World Impact", study.impact],
+            ["Technical Depth", study.technical],
+          ].map(([title, points], i) => (
+            <motion.div
+              key={title as string}
+              initial={{ opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.48 + i * 0.08, ease: EASE }}
+              className="rounded-md border border-accent/40 bg-card/60 p-6 shadow-[0_0_70px_-30px_var(--neon)]"
+            >
+              <h4 className="display text-sm tracking-[0.3em] text-accent sm:text-base">
+                {title as string}
+              </h4>
+              <ul className="mt-3 space-y-2">
+                {(points as string[]).map((p) => (
+                  <li
+                    key={p}
+                    className="flex gap-3 text-base leading-relaxed text-foreground/85 sm:text-lg"
+                  >
+                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                    <span>{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 }

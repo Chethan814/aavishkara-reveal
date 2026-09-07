@@ -6,10 +6,11 @@ import { SmoothScroll } from "@/components/reveal/SmoothScroll";
 import { Ambience } from "@/components/reveal/Ambience";
 import { ScrollProgress } from "@/components/reveal/ScrollProgress";
 import { Typewriter } from "@/components/reveal/Typewriter";
-import { CaseStudySection, SectionDivider } from "@/components/reveal/CaseStudySection";
-import { DeckProgress } from "@/components/reveal/DeckProgress";
+import { CaseStudyDeck } from "@/components/reveal/CaseStudyDeck";
+import { Sponsors } from "@/components/reveal/Sponsors";
 import { caseStudies } from "@/data/caseStudies";
 import akMark from "@/assets/aavishkara-ak-mark.png.asset.json";
+import doorway from "@/assets/doorway.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -78,7 +79,6 @@ function Reveal() {
       <SmoothScroll />
       <Ambience />
       <ScrollProgress />
-      <DeckProgress total={caseStudies.length} />
 
       {/* 1 — OPENING */}
       <Section>
@@ -150,10 +150,25 @@ function Reveal() {
             Case Study Presented By
           </p>
         </motion.div>
+
+        <Sponsors />
       </Section>
 
       {/* 3 — BUILD-UP */}
-      <Section>
+      <Section className="overflow-hidden">
+        <motion.img
+          src={doorway}
+          alt=""
+          aria-hidden
+          loading="lazy"
+          width={1536}
+          height={1024}
+          initial={{ opacity: 0, scale: 1.08 }}
+          whileInView={{ opacity: 0.16, scale: 1 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 2, ease: EASE }}
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover [mask-image:radial-gradient(ellipse_at_center,black_25%,transparent_72%)]"
+        />
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -258,14 +273,8 @@ function Reveal() {
         </div>
       </Section>
 
-      {/* 5 — THE 12 CASE STUDIES */}
-      {caseStudies.map((study, i) => (
-        <div key={study.title}>
-          <CaseStudySection study={study} index={i} />
-          <SectionDivider />
-        </div>
-      ))}
-
+      {/* 5 — THE 12 CASE STUDIES (button-controlled) */}
+      <CaseStudyDeck studies={caseStudies} />
 
       {/* 6 — CLOSING */}
       <Section>
