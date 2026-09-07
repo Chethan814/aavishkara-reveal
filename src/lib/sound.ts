@@ -5,6 +5,7 @@ type Ctx = AudioContext & { __drone?: () => void };
 let ctx: Ctx | null = null;
 let master: GainNode | null = null;
 let muted = false;
+let unlocked = false;
 let droneStop: (() => void) | null = null;
 const listeners = new Set<(m: boolean) => void>();
 
@@ -12,6 +13,8 @@ const MUTE_KEY = "aavishkara-muted";
 
 function ensure(): Ctx | null {
   if (typeof window === "undefined") return null;
+  /* browsers block audio before a gesture — stay silent instead of warning */
+  if (!unlocked) return null;
   if (!ctx) {
     const AC =
       window.AudioContext ??
@@ -25,6 +28,13 @@ function ensure(): Ctx | null {
   if (ctx.state === "suspended") void ctx.resume();
   return ctx;
 }
+
+/** Call from a real user gesture before any sound can play. */
+export function unlockAudio() {
+  unlocked = true;
+  ensure();
+}
+
 
 function noiseBuffer(c: AudioContext, seconds: number) {
   const len = Math.floor(c.sampleRate * seconds);
@@ -194,6 +204,7 @@ export function initSound() {
 
 export function setMuted(next: boolean) {
   muted = next;
+  if (!next) unlockAudio();
   if (typeof window !== "undefined") window.localStorage.setItem(MUTE_KEY, next ? "1" : "0");
   if (master && ctx) {
     master.gain.setTargetAtTime(next ? 0 : 0.9, ctx.currentTime, 0.1);

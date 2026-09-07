@@ -9,18 +9,28 @@ import { EASE, PORTAL_SWAP, PORTAL_TOTAL } from "@/lib/motion";
 import { playSound } from "@/lib/sound";
 import type { CaseStudy } from "@/data/caseStudies";
 
+/* below this the text would be unreadable, so we scroll inside instead */
+const MIN_FIT_SCALE = 0.72;
+
 export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   const [index, setIndex] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
   const [inView, setInView] = useState(false);
+  const [fitScale, setFitScale] = useState(1);
+  const [naturalHeight, setNaturalHeight] = useState(0);
+  const [needsInnerScroll, setNeedsInnerScroll] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+  const fitAreaRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const indexRef = useRef(0);
   const busyRef = useRef(false);
   const inViewRef = useRef(false);
   const timersRef = useRef<number[]>([]);
+  const needsScrollRef = useRef(false);
 
   indexRef.current = index;
   inViewRef.current = inView;
+  needsScrollRef.current = needsInnerScroll;
 
   /* every animation timer is tracked so nothing fires after unmount */
   const track = useCallback((id: number) => {
@@ -54,6 +64,38 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     },
     [studies.length, track],
   );
+
+  /* auto-shrink the panel so a whole case study fits one screen; on very small
+     screens stop shrinking (it would be unreadable) and scroll inside instead */
+  useEffect(() => {
+    const area = fitAreaRef.current;
+    const content = contentRef.current;
+    if (!area || !content) return;
+    area.scrollTop = 0;
+
+    const fit = () => {
+      /* offsetHeight ignores the current transform, so it is the natural height */
+      const natural = content.offsetHeight;
+      const available = area.clientHeight;
+      if (!natural || !available) return;
+      const raw = available / natural;
+      const scale = Math.min(1, Math.max(MIN_FIT_SCALE, raw));
+      setFitScale(scale);
+      setNaturalHeight(natural);
+      setNeedsInnerScroll(raw < MIN_FIT_SCALE);
+    };
+
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(area);
+    ro.observe(content);
+    window.addEventListener("resize", fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", fit);
+    };
+  }, [index]);
+
 
 
   /* pin the deck: once it enters, lock scrolling until the sequence is done */
@@ -96,6 +138,20 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     const onWheel = (e: WheelEvent) => {
       if (!inViewRef.current) return;
       const down = e.deltaY > 0;
+
+      /* when the panel is taller than the screen, the wheel scrolls it first */
+      const area = fitAreaRef.current;
+      if (needsScrollRef.current && area) {
+        const atTop = area.scrollTop <= 0;
+        const atBottom = area.scrollTop + area.clientHeight >= area.scrollHeight - 1;
+        if ((down && !atBottom) || (!down && !atTop)) {
+          e.preventDefault();
+          e.stopPropagation();
+          area.scrollTop += e.deltaY;
+          return;
+        }
+      }
+
       const canLeave =
         (down && indexRef.current === studies.length - 1) ||
         (!down && indexRef.current === 0);
@@ -108,6 +164,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       }
     };
 
+
     let startY = 0;
     const onTouchStart = (e: TouchEvent) => {
       startY = e.touches[0]?.clientY ?? 0;
@@ -116,12 +173,22 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       if (!inViewRef.current) return;
       const y = e.touches[0]?.clientY ?? 0;
       const down = startY - y > 0;
+
+      /* let a tall panel scroll under the finger before leaving the deck */
+      const area = fitAreaRef.current;
+      if (needsScrollRef.current && area) {
+        const atTop = area.scrollTop <= 0;
+        const atBottom = area.scrollTop + area.clientHeight >= area.scrollHeight - 1;
+        if ((down && !atBottom) || (!down && !atTop)) return;
+      }
+
       const canLeave =
         (down && indexRef.current === studies.length - 1) ||
         (!down && indexRef.current === 0);
       if (canLeave && Math.abs(startY - y) > 80) release();
       else e.preventDefault();
     };
+
 
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("wheel", onWheel, { passive: false, capture: true });
@@ -178,7 +245,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       id="case-deck"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
-      className="relative z-10 flex h-screen w-full flex-col justify-center overflow-hidden px-6 py-12 sm:px-10 lg:px-20"
+      className="relative z-10 flex h-screen w-full flex-col justify-center overflow-hidden px-6 pb-12 pt-24 sm:px-10 sm:py-12 lg:px-20"
     >
       <PortalTransition active={transitioning} />
 
@@ -194,20 +261,32 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       </div>
 
       <motion.div
+        ref={fitAreaRef}
         animate={
           transitioning
             ? { scale: 0.965, opacity: 0.2, filter: "blur(7px)", x: [0, -3, 3, 0] }
             : { scale: 1, opacity: 1, filter: "blur(0px)" }
         }
         transition={{ duration: transitioning ? 0.3 : 0.7, ease: EASE }}
-        className="w-full"
+        className={`flex min-h-0 w-full flex-1 justify-center ${
+          needsInnerScroll ? "items-start overflow-y-auto" : "items-center overflow-hidden"
+        }`}
       >
         <AnimatePresence mode="wait">
-          <div key={index} className="w-full">
+          <div
+            key={index}
+            ref={contentRef}
+            className="w-full origin-top"
+            style={{
+              transform: `scale(${fitScale})`,
+              marginBottom: -naturalHeight * (1 - fitScale),
+            }}
+          >
             <CaseStudyPanel study={study} index={index} />
           </div>
         </AnimatePresence>
       </motion.div>
+
 
       {/* navigation */}
       <div className="mx-auto mt-10 flex w-full max-w-6xl flex-col items-center gap-5">

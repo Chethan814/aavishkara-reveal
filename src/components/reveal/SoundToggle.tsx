@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 
-import { initSound, isMuted, setMuted, startAmbience, subscribeMuted } from "@/lib/sound";
+import { initSound, isMuted, setMuted, startAmbience, subscribeMuted, unlockAudio } from "@/lib/sound";
 
 export function SoundToggle() {
   const [muted, setMutedState] = useState(false);
@@ -13,6 +13,7 @@ export function SoundToggle() {
 
     /* browsers require a gesture before audio can start */
     const kick = () => {
+      unlockAudio();
       if (!isMuted()) startAmbience();
     };
     window.addEventListener("pointerdown", kick, { once: true });
