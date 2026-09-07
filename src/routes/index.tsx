@@ -121,7 +121,7 @@ function Reveal() {
           <img
             src={iicLogo.url}
             alt="Institution's Innovation Council"
-            className="hero-logo h-10 w-auto rounded sm:h-14 lg:h-16"
+            className="hero-logo h-10 w-auto mix-blend-screen sm:h-14 lg:h-16"
           />
         </motion.div>
 
