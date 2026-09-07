@@ -164,10 +164,10 @@ function Reveal() {
           width={1536}
           height={1024}
           initial={{ opacity: 0, scale: 1.08 }}
-          whileInView={{ opacity: 0.28, scale: 1 }}
+          whileInView={{ opacity: 0.16, scale: 1 }}
           viewport={{ once: true, amount: 0.4 }}
           transition={{ duration: 2, ease: EASE }}
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover [mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_78%)]"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover [mask-image:radial-gradient(ellipse_at_center,black_25%,transparent_72%)]"
         />
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}

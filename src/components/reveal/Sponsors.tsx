@@ -23,7 +23,7 @@ export function Sponsors() {
         Co-Sponsored By
       </motion.p>
 
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-10 gap-y-6 sm:gap-x-14">
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-5 lg:flex-nowrap lg:gap-x-8">
         {partners.map((name, i) => (
           <motion.div
             key={name}
@@ -31,7 +31,7 @@ export function Sponsors() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.6, delay: 0.12 + i * 0.09, ease: EASE }}
-            className="display flex h-14 items-center rounded-md border border-border/70 px-6 text-base tracking-[0.25em] text-foreground/70 brightness-90 transition duration-300 hover:border-primary/50 hover:text-foreground hover:brightness-125 sm:text-lg"
+            className="display flex h-14 shrink-0 items-center whitespace-nowrap rounded-md border border-border/70 px-5 text-sm tracking-[0.22em] text-foreground/70 brightness-90 transition duration-300 hover:border-primary/50 hover:text-foreground hover:brightness-125 sm:text-base"
           >
             {name}
           </motion.div>
