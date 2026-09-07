@@ -4,6 +4,7 @@ import { ChevronDown, Lock } from "lucide-react";
 
 import { SmoothScroll } from "@/components/reveal/SmoothScroll";
 import { Ambience } from "@/components/reveal/Ambience";
+import { SparkBurst } from "@/components/reveal/SparkBurst";
 import { ScrollProgress } from "@/components/reveal/ScrollProgress";
 import { Typewriter } from "@/components/reveal/Typewriter";
 import { CaseStudyDeck } from "@/components/reveal/CaseStudyDeck";
@@ -11,8 +12,12 @@ import { Sponsors } from "@/components/reveal/Sponsors";
 import { CustomCursor } from "@/components/reveal/CustomCursor";
 import { MagneticButton } from "@/components/reveal/MagneticButton";
 import { caseStudies } from "@/data/caseStudies";
+import { EASE, HERO_LOGO_DELAY } from "@/lib/motion";
 import akMark from "@/assets/aavishkara-ak-mark.png.asset.json";
+import trustLogo from "@/assets/soundarya-trust.png.asset.json";
+import iicLogo from "@/assets/iic-logo.png.asset.json";
 import doorway from "@/assets/doorway.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
