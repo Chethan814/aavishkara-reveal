@@ -60,6 +60,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     if (!el) return;
     const lenis = () => (window as unknown as { __lenis?: any }).__lenis;
 
+    let stopTimer = 0;
     const enter = () => {
       if (inViewRef.current) return;
       setInView(true);
@@ -67,18 +68,21 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       const l = lenis();
       if (l) {
         l.scrollTo(el, { duration: 0.8, lock: true });
-        window.setTimeout(() => l.stop(), 850);
+        window.clearTimeout(stopTimer);
+        stopTimer = window.setTimeout(() => l.stop(), 850);
       } else {
         el.scrollIntoView({ behavior: "smooth" });
       }
     };
 
     const release = () => {
-      if (!inViewRef.current) return;
+      if (!inViewRef.current || busyRef.current) return;
+      window.clearTimeout(stopTimer);
       setInView(false);
       inViewRef.current = false;
       lenis()?.start();
     };
+
 
     const onScroll = () => {
       if (inViewRef.current) return;
