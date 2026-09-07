@@ -204,6 +204,7 @@ export function initSound() {
 
 export function setMuted(next: boolean) {
   muted = next;
+  if (!next) unlockAudio();
   if (typeof window !== "undefined") window.localStorage.setItem(MUTE_KEY, next ? "1" : "0");
   if (master && ctx) {
     master.gain.setTargetAtTime(next ? 0 : 0.9, ctx.currentTime, 0.1);

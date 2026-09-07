@@ -194,20 +194,27 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       </div>
 
       <motion.div
+        ref={fitAreaRef}
         animate={
           transitioning
             ? { scale: 0.965, opacity: 0.2, filter: "blur(7px)", x: [0, -3, 3, 0] }
             : { scale: 1, opacity: 1, filter: "blur(0px)" }
         }
         transition={{ duration: transitioning ? 0.3 : 0.7, ease: EASE }}
-        className="w-full"
+        className="flex min-h-0 w-full flex-1 items-center justify-center"
       >
         <AnimatePresence mode="wait">
-          <div key={index} className="w-full">
+          <div
+            key={index}
+            ref={contentRef}
+            className="w-full origin-center"
+            style={{ transform: `scale(${fitScale})` }}
+          >
             <CaseStudyPanel study={study} index={index} />
           </div>
         </AnimatePresence>
       </motion.div>
+
 
       {/* navigation */}
       <div className="mx-auto mt-10 flex w-full max-w-6xl flex-col items-center gap-5">
