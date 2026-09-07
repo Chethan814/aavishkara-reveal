@@ -9,6 +9,7 @@ import { Typewriter } from "@/components/reveal/Typewriter";
 import { CaseStudySection, SectionDivider } from "@/components/reveal/CaseStudySection";
 import { DeckProgress } from "@/components/reveal/DeckProgress";
 import { caseStudies } from "@/data/caseStudies";
+import akMark from "@/assets/aavishkara-ak-mark.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
