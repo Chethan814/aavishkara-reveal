@@ -10,6 +10,7 @@ import { Typewriter } from "@/components/reveal/Typewriter";
 import { CaseStudyDeck } from "@/components/reveal/CaseStudyDeck";
 import { Sponsors } from "@/components/reveal/Sponsors";
 import { CustomCursor } from "@/components/reveal/CustomCursor";
+import { SoundToggle } from "@/components/reveal/SoundToggle";
 import { MagneticButton } from "@/components/reveal/MagneticButton";
 import { caseStudies } from "@/data/caseStudies";
 import { EASE, HERO_LOGO_DELAY } from "@/lib/motion";
@@ -96,6 +97,7 @@ function Reveal() {
       <SparkBurst />
       <ScrollProgress />
       <CustomCursor />
+      <SoundToggle />
 
       {/* 1 — OPENING */}
       <Section>
