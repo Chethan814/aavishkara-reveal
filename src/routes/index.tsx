@@ -100,7 +100,7 @@ function Reveal() {
           <img
             src={akMark.url}
             alt="A"
-            className="inline-block h-[3rem] w-auto align-middle sm:h-[4.5rem] md:h-[6rem] lg:h-[8rem]"
+            className="inline-block h-[3.5rem] w-auto align-baseline sm:h-[5.5rem] md:h-[7.5rem] lg:h-[9.5rem]"
             style={{ filter: "drop-shadow(0 0 18px rgba(245,184,0,0.55))" }}
           />
           avishkara <span className="text-gold-soft">&rsquo;26</span>
