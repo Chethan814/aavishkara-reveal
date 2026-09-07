@@ -27,7 +27,7 @@ export function CaseStudyPanel({ study, index }: { study: CaseStudy; index: numb
       <motion.p
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: EASE }}
+        transition={{ duration: 0.45, delay: 0.08, ease: EASE }}
         className="display text-sm tracking-[0.5em] text-accent sm:text-base"
       >
         {study.category}
@@ -36,7 +36,7 @@ export function CaseStudyPanel({ study, index }: { study: CaseStudy; index: numb
       <motion.h2
         initial={{ opacity: 0, y: 28, filter: "blur(10px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        transition={{ duration: 0.6, ease: EASE }}
+        transition={{ duration: 0.6, delay: 0.16, ease: EASE }}
         className="display text-glow-gold mt-3 text-3xl leading-[1] text-primary sm:text-5xl lg:text-6xl"
       >
         <span className="text-gold-soft/70">{pad(index + 1)}</span>{" "}

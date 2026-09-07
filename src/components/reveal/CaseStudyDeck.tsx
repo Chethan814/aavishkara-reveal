@@ -143,7 +143,8 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
   };
 
-  const study = studies[index]!;
+  const study = studies[index];
+  if (!study) return null;
   const isFirst = index === 0;
   const isLast = index === studies.length - 1;
 
@@ -171,10 +172,10 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       <motion.div
         animate={
           transitioning
-            ? { scale: 1.06, opacity: 0, filter: "blur(8px)" }
+            ? { scale: 0.965, opacity: 0.2, filter: "blur(7px)", x: [0, -3, 3, 0] }
             : { scale: 1, opacity: 1, filter: "blur(0px)" }
         }
-        transition={{ duration: transitioning ? 0.9 : 0.7, ease: EASE }}
+        transition={{ duration: transitioning ? 0.3 : 0.7, ease: EASE }}
         className="w-full"
       >
         <AnimatePresence mode="wait">

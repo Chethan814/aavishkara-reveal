@@ -5,7 +5,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 /** Total duration of the portal transition in ms. */
 export const PORTAL_TOTAL = 2200;
 /** Point at which the underlying content is swapped (peak of the light burst). */
-export const PORTAL_SWAP = 1050;
+export const PORTAL_SWAP = 1100;
 
 export function PortalTransition({ active }: { active: boolean }) {
   return (
@@ -19,46 +19,46 @@ export function PortalTransition({ active }: { active: boolean }) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.35 }}
         >
-          {/* darken */}
+          {/* current scene compresses into darkness */}
           <motion.div
             className="absolute inset-0 bg-background"
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.75, 0.9, 0.5, 0] }}
-            transition={{ duration: PORTAL_TOTAL / 1000, times: [0, 0.28, 0.48, 0.72, 1], ease: "easeInOut" }}
+            animate={{ opacity: [0, 0.72, 0.9, 0.58, 0] }}
+            transition={{ duration: PORTAL_TOTAL / 1000, times: [0, 0.14, 0.5, 0.76, 1], ease: EASE }}
           />
 
-          {/* doorway: opens from the centre, floods the screen, then closes */}
+          {/* vertical portal bar expands, peaks at the swap, and seals again */}
           <motion.div
-            className="relative"
-            initial={{ width: 0, height: "18vh", opacity: 0 }}
+            className="portal-impact relative h-[120vh]"
+            initial={{ width: "2px", opacity: 0, scaleY: 0.25 }}
             animate={{
-              width: ["0vw", "16vw", "220vw", "180vw", "0vw"],
-              height: ["18vh", "70vh", "220vh", "180vh", "18vh"],
+              width: ["2px", "12px", "32vw", "130vw", "18vw", "2px"],
               opacity: [0, 1, 1, 1, 0],
+              scaleY: [0.25, 1, 1, 1, 1, 0.25],
             }}
-            transition={{ duration: PORTAL_TOTAL / 1000, times: [0, 0.3, 0.52, 0.68, 1], ease: EASE }}
+            transition={{ duration: PORTAL_TOTAL / 1000, times: [0, 0.14, 0.36, 0.5, 0.78, 1], ease: EASE }}
             style={{
-              borderRadius: "9999px 9999px 0 0",
               background:
-                "radial-gradient(closest-side, rgba(255,255,255,0.98), oklch(0.9 0.15 88 / 0.9) 45%, oklch(0.78 0.17 70 / 0.35) 72%, transparent 100%)",
-              boxShadow: "0 0 160px 40px oklch(0.85 0.16 85 / 0.55)",
+                "linear-gradient(90deg, transparent, oklch(0.82 0.16 85 / 0.72) 18%, oklch(0.98 0.01 90) 50%, oklch(0.82 0.16 85 / 0.72) 82%, transparent)",
+              boxShadow: "0 0 90px 22px oklch(0.82 0.16 85 / 0.48)",
+              filter: "blur(1px)",
             }}
           />
 
           {/* white burst at the peak */}
           <motion.div
-            className="absolute inset-0 bg-white"
+            className="absolute inset-0 bg-foreground"
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0, 0.85, 0.1, 0] }}
-            transition={{ duration: PORTAL_TOTAL / 1000, times: [0, 0.4, 0.5, 0.66, 1], ease: "easeInOut" }}
+            animate={{ opacity: [0, 0, 0.72, 0.08, 0] }}
+            transition={{ duration: PORTAL_TOTAL / 1000, times: [0, 0.42, 0.5, 0.64, 1], ease: EASE }}
           />
 
-          {/* horizontal light wipe */}
+          {/* tight central flare gives the sweep motion blur */}
           <motion.div
-            className="absolute inset-y-0 w-[35vw] bg-gradient-to-r from-transparent via-primary to-transparent blur-2xl"
-            initial={{ x: "-60vw", opacity: 0 }}
-            animate={{ x: ["-60vw", "120vw"], opacity: [0, 1, 0] }}
-            transition={{ duration: 1.1, delay: 0.35, ease: EASE }}
+            className="absolute inset-y-0 left-1/2 w-5 -translate-x-1/2 bg-foreground blur-md"
+            initial={{ scaleY: 0, opacity: 0 }}
+            animate={{ scaleY: [0, 1, 1, 0], opacity: [0, 1, 1, 0] }}
+            transition={{ duration: PORTAL_TOTAL / 1000, times: [0, 0.3, 0.7, 1], ease: EASE }}
           />
         </motion.div>
       )}
