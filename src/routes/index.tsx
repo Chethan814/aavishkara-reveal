@@ -144,15 +144,9 @@ function Reveal() {
           <h1 className="sr-only">Aavishkara &rsquo;26</h1>
           <img
             src={titleCard.url}
-            alt="Aavishkara '26 — Sponsored by IBM"
-            className="w-[min(88vw,42rem)] sm:w-[min(80vw,54rem)] lg:w-[min(75vw,64rem)]"
-            style={{
-              maskImage:
-                "radial-gradient(ellipse 88% 96% at 50% 50%, black 62%, transparent 98%)",
-              WebkitMaskImage:
-                "radial-gradient(ellipse 88% 96% at 50% 50%, black 62%, transparent 98%)",
-              filter: "drop-shadow(0 0 34px rgba(245,184,0,0.28))",
-            }}
+            alt="Aavishkara '26"
+            className="w-[min(90vw,40rem)] sm:w-[min(85vw,52rem)] lg:w-[min(78vw,62rem)]"
+            style={{ filter: "drop-shadow(0 0 40px rgba(245,184,0,0.22))" }}
           />
         </motion.div>
 
