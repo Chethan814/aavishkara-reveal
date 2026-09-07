@@ -37,48 +37,80 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     [studies.length],
   );
 
-  /* track whether the deck owns the viewport */
+  /* pin the deck: once it enters, lock scrolling until the sequence is done */
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setInView(!!entry && entry.intersectionRatio > 0.55),
-      { threshold: [0, 0.55, 0.9] },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+    const lenis = () => (window as unknown as { __lenis?: any }).__lenis;
 
-  /* lock free scrolling inside the sequence */
-  useEffect(() => {
-    const blocked = (down: boolean) =>
-      inViewRef.current &&
-      (down ? indexRef.current < studies.length - 1 : indexRef.current > 0);
+    const enter = () => {
+      if (inViewRef.current) return;
+      setInView(true);
+      inViewRef.current = true;
+      const l = lenis();
+      if (l) {
+        l.scrollTo(el, { duration: 0.8, lock: true });
+        window.setTimeout(() => l.stop(), 850);
+      } else {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    };
 
+    const release = () => {
+      if (!inViewRef.current) return;
+      setInView(false);
+      inViewRef.current = false;
+      lenis()?.start();
+    };
+
+    const onScroll = () => {
+      if (inViewRef.current) return;
+      const r = el.getBoundingClientRect();
+      if (r.top <= window.innerHeight * 0.45 && r.bottom > window.innerHeight * 0.5) enter();
+    };
+
+    let released = 0;
     const onWheel = (e: WheelEvent) => {
-      if (blocked(e.deltaY > 0)) {
+      if (!inViewRef.current) return;
+      const down = e.deltaY > 0;
+      const canLeave =
+        (down && indexRef.current === studies.length - 1) ||
+        (!down && indexRef.current === 0);
+      if (canLeave && Date.now() - released > 600) {
+        released = Date.now();
+        release();
+      } else {
         e.preventDefault();
         e.stopPropagation();
       }
     };
+
     let startY = 0;
     const onTouchStart = (e: TouchEvent) => {
       startY = e.touches[0]?.clientY ?? 0;
     };
     const onTouchMove = (e: TouchEvent) => {
+      if (!inViewRef.current) return;
       const y = e.touches[0]?.clientY ?? 0;
-      if (blocked(startY - y > 0)) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      const down = startY - y > 0;
+      const canLeave =
+        (down && indexRef.current === studies.length - 1) ||
+        (!down && indexRef.current === 0);
+      if (canLeave && Math.abs(startY - y) > 80) release();
+      else e.preventDefault();
     };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("wheel", onWheel, { passive: false, capture: true });
     window.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
+    onScroll();
     return () => {
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("wheel", onWheel, true);
       window.removeEventListener("touchstart", onTouchStart, true);
       window.removeEventListener("touchmove", onTouchMove, true);
+      lenis()?.start();
     };
   }, [studies.length]);
 
@@ -121,7 +153,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       id="case-deck"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
-      className="relative z-10 flex min-h-screen w-full flex-col justify-center overflow-hidden px-6 py-16 sm:px-10 lg:px-20"
+      className="relative z-10 flex h-screen w-full flex-col justify-center overflow-hidden px-6 py-12 sm:px-10 lg:px-20"
     >
       <PortalTransition active={transitioning} />
 
