@@ -306,14 +306,15 @@ function Reveal() {
           </h2>
 
           <motion.h3
-            initial={{ clipPath: "inset(0 100% 0 0)", opacity: 0 }}
-            whileInView={{ clipPath: "inset(0 0% 0 0)", opacity: 1 }}
-            viewport={{ once: true, amount: 0.6 }}
+            initial={{ clipPath: "inset(0% 100% 0% 0%)", opacity: 0 }}
+            whileInView={{ clipPath: "inset(0% 0% 0% 0%)", opacity: 1 }}
+            viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 1.5, delay: 0.9, ease: EASE }}
             className="display mt-6 text-xl leading-tight text-foreground/85 sm:text-3xl"
           >
             One Weekend to Answer Them.
           </motion.h3>
+
 
           <motion.div
             initial={{ scaleX: 0 }}
