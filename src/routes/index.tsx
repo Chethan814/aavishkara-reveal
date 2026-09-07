@@ -13,7 +13,7 @@ import { CustomCursor } from "@/components/reveal/CustomCursor";
 import { MagneticButton } from "@/components/reveal/MagneticButton";
 import { caseStudies } from "@/data/caseStudies";
 import { EASE, HERO_LOGO_DELAY } from "@/lib/motion";
-import akMark from "@/assets/aavishkara-ak-mark.png.asset.json";
+import titleCard from "@/assets/aavishkara-title-card.png.asset.json";
 import trustLogo from "@/assets/soundarya-trust.png.asset.json";
 import iicLogo from "@/assets/iic-logo.png.asset.json";
 import doorway from "@/assets/doorway.jpg";
@@ -135,20 +135,27 @@ function Reveal() {
           Soundarya Institute of Management and Science
         </motion.p>
 
-        <motion.h1
+        <motion.div
           initial={{ opacity: 0, filter: "blur(18px)", scale: 0.96 }}
           animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
           transition={{ delay: 0.9, duration: 2.2, ease: EASE }}
-          className="mouse-depth display text-glow-gold text-5xl leading-[0.92] text-primary sm:text-7xl md:text-8xl lg:text-9xl"
+          className="mouse-depth"
         >
+          <h1 className="sr-only">Aavishkara &rsquo;26</h1>
           <img
-            src={akMark.url}
-            alt="A"
-            className="inline-block h-[3.5rem] w-auto align-baseline sm:h-[5.5rem] md:h-[7.5rem] lg:h-[9.5rem]"
-            style={{ filter: "drop-shadow(0 0 18px rgba(245,184,0,0.55))" }}
+            src={titleCard.url}
+            alt="Aavishkara '26 — Sponsored by IBM"
+            className="w-[min(88vw,42rem)] sm:w-[min(80vw,54rem)] lg:w-[min(75vw,64rem)]"
+            style={{
+              maskImage:
+                "radial-gradient(ellipse 88% 96% at 50% 50%, black 62%, transparent 98%)",
+              WebkitMaskImage:
+                "radial-gradient(ellipse 88% 96% at 50% 50%, black 62%, transparent 98%)",
+              filter: "drop-shadow(0 0 34px rgba(245,184,0,0.28))",
+            }}
           />
-          avishkara <span className="text-gold-soft">&rsquo;26</span>
-        </motion.h1>
+        </motion.div>
+
 
         <motion.div
           initial={{ opacity: 0, scaleX: 0 }}
