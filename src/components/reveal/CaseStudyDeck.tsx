@@ -13,7 +13,10 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   const [index, setIndex] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
   const [inView, setInView] = useState(false);
+  const [fitScale, setFitScale] = useState(1);
   const sectionRef = useRef<HTMLElement>(null);
+  const fitAreaRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const indexRef = useRef(0);
   const busyRef = useRef(false);
   const inViewRef = useRef(false);
