@@ -180,6 +180,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
     };
 
     const onMouseDown = (e: MouseEvent) => {
+      console.log("[boot] mousedown", activeRef.current);
       if (activeRef.current) return;
       addRipple(e.clientX, e.clientY, false);
       holdTimer.current = setTimeout(
