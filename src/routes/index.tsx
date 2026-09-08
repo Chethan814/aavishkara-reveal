@@ -103,11 +103,8 @@ function Reveal() {
     else deck.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleBootDone = (fromScan?: boolean) => {
+  const handleBootDone = () => {
     setBooting(false);
-    if (fromScan) {
-      setPlayingVideo(true);
-    }
   };
 
   if (booting) return <BootSequence onDone={handleBootDone} />;

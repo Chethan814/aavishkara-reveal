@@ -9,16 +9,10 @@ import { EASE, PORTAL_SWAP, PORTAL_TOTAL } from "@/lib/motion";
 import { playSound } from "@/lib/sound";
 import type { CaseStudy } from "@/data/caseStudies";
 
-/* below this the text would be unreadable, so we scroll inside instead */
-const MIN_FIT_SCALE = 0.55;
-
 export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   const [index, setIndex] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
   const [inView, setInView] = useState(false);
-  const [fitScale, setFitScale] = useState(1);
-  const [naturalHeight, setNaturalHeight] = useState(0);
-  const [needsInnerScroll, setNeedsInnerScroll] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const fitAreaRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -26,11 +20,9 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   const busyRef = useRef(false);
   const inViewRef = useRef(false);
   const timersRef = useRef<number[]>([]);
-  const needsScrollRef = useRef(false);
 
   indexRef.current = index;
   inViewRef.current = inView;
-  needsScrollRef.current = needsInnerScroll;
 
   /* every animation timer is tracked so nothing fires after unmount */
   const track = useCallback((id: number) => {
@@ -84,35 +76,12 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     [studies.length, track],
   );
 
-  /* auto-shrink the panel so a whole case study fits one screen; on very small
-     screens stop shrinking (it would be unreadable) and scroll inside instead */
+  /* Reset scroll position to top whenever index changes */
   useEffect(() => {
     const area = fitAreaRef.current;
-    const content = contentRef.current;
-    if (!area || !content) return;
-    area.scrollTop = 0;
-
-    const fit = () => {
-      /* offsetHeight ignores the current transform, so it is the natural height */
-      const natural = content.offsetHeight;
-      const available = area.clientHeight;
-      if (!natural || !available) return;
-      const raw = available / natural;
-      const scale = Math.min(1, Math.max(MIN_FIT_SCALE, raw));
-      setFitScale(scale);
-      setNaturalHeight(natural);
-      setNeedsInnerScroll(raw < MIN_FIT_SCALE);
-    };
-
-    fit();
-    const ro = new ResizeObserver(fit);
-    ro.observe(area);
-    ro.observe(content);
-    window.addEventListener("resize", fit);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", fit);
-    };
+    if (area) {
+      area.scrollTop = 0;
+    }
   }, [index]);
 
 
@@ -283,23 +252,17 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
         ref={fitAreaRef}
         animate={
           transitioning
-            ? { scale: 0.965, opacity: 0.2, filter: "blur(7px)", x: [0, -3, 3, 0] }
+            ? { scale: 0.985, opacity: 0.25, filter: "blur(6px)", x: [0, -3, 3, 0] }
             : { scale: 1, opacity: 1, filter: "blur(0px)" }
         }
-        transition={{ duration: transitioning ? 0.3 : 0.7, ease: EASE }}
-        className={`flex min-h-0 w-full flex-1 justify-center ${
-          needsInnerScroll ? "items-start overflow-y-auto no-scrollbar" : "items-center overflow-hidden"
-        }`}
+        transition={{ duration: transitioning ? 0.25 : 0.5, ease: EASE }}
+        className="flex min-h-0 w-full flex-1 justify-center items-start overflow-y-auto overflow-x-hidden case-study-scrollbar px-1 sm:px-3 pt-8 sm:pt-4 pb-2"
       >
         <AnimatePresence mode="wait">
           <div
             key={index}
             ref={contentRef}
-            className="w-full origin-top"
-            style={{
-              transform: `scale(${fitScale})`,
-              marginBottom: -naturalHeight * (1 - fitScale),
-            }}
+            className="w-full"
           >
             <CaseStudyPanel study={study} index={index} />
           </div>
@@ -308,9 +271,9 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
 
 
       {/* navigation */}
-      <div className="mx-auto mt-2 flex w-full max-w-5xl shrink-0 flex-col items-center gap-2 sm:mt-3 sm:gap-2.5">
+      <div className="mx-auto mt-2 flex w-full max-w-5xl shrink-0 flex-col items-center gap-2 sm:mt-3 sm:gap-2.5 z-30">
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/70 to-transparent shadow-[var(--glow-gold)]" />
-        <div className="flex w-full flex-wrap items-center justify-between gap-3">
+        <div className="flex w-full flex-wrap items-center justify-between gap-2.5">
           <MagneticButton
             variant="ghost"
             onClick={() => go(-1)}
@@ -318,11 +281,11 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
             ariaLabel="Previous case study"
           >
             <ArrowLeft className="h-4 w-4" />
-            Previous
+            <span className="hidden xs:inline">Previous</span>
           </MagneticButton>
 
-          {/* Quick jump pills */}
-          <div className="hidden lg:flex max-w-xl flex-wrap items-center justify-center gap-1">
+          {/* Quick jump pills - scrollable horizontally on ALL screen sizes */}
+          <div className="flex max-w-[65vw] sm:max-w-md lg:max-w-xl items-center gap-1 overflow-x-auto py-1 px-1 scrollbar-none">
             {studies.map((s, idx) => (
               <button
                 key={s.code || idx}
@@ -330,10 +293,10 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
                 onClick={() => jumpTo(idx)}
                 disabled={transitioning}
                 title={`${s.code}: ${s.title}`}
-                className={`rounded px-1.5 py-0.5 font-mono text-[0.65rem] transition-all ${
+                className={`rounded shrink-0 px-2 py-0.5 font-mono text-[0.68rem] transition-all cursor-pointer ${
                   idx === index
-                    ? "bg-primary font-bold text-primary-foreground shadow-[0_0_12px_var(--gold)]"
-                    : "border border-border/40 bg-card/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                    ? "bg-primary font-bold text-primary-foreground shadow-[0_0_12px_var(--gold)] scale-105"
+                    : "border border-border/50 bg-card/60 text-muted-foreground hover:border-primary/50 hover:text-foreground"
                 }`}
               >
                 {s.code || String(idx + 1).padStart(2, "0")}
@@ -346,14 +309,15 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
             disabled={isLast || transitioning}
             ariaLabel="Next case study"
           >
-            {isLast ? "All Twenty Revealed" : "Next Case Study"}
-            <ArrowRight className="h-5 w-5" />
+            <span className="hidden xs:inline">{isLast ? "All Twenty Revealed" : "Next Case Study"}</span>
+            <span className="xs:hidden">{isLast ? "Done" : "Next"}</span>
+            <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </MagneticButton>
         </div>
         <p className="display text-[0.6rem] tracking-[0.35em] text-muted-foreground sm:text-xs">
           {isLast
             ? "Scroll down to continue"
-            : "Use buttons, jump pills, arrow keys, spacebar or swipe"}
+            : "Use buttons, swipe, arrow keys or problem tags"}
         </p>
       </div>
     </section>

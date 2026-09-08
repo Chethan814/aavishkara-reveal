@@ -609,3 +609,32 @@
 @media (prefers-reduced-motion: reduce) {
   .boot-grid, .boot-scan, .boot-hand, .boot-hand-ring, .boot-hand-shimmer { animation: none; }
 }
+
+/* Custom subtle gold scrollbar for case study deck */
+.case-study-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.case-study-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+.case-study-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(218, 165, 32, 0.4);
+  border-radius: 4px;
+}
+.case-study-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(218, 165, 32, 0.8);
+}
+.case-study-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(218, 165, 32, 0.4) transparent;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

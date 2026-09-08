@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Volume2, VolumeX, SkipForward } from "lucide-react";
 
 import {
   BOOT_SESSION_KEY,
@@ -111,6 +112,57 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
     warmBootPreload();
   }, [visible]);
 
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [muted, setMuted] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(20);
+  const [currentTime, setCurrentTime] = useState(0);
+
+  const finishBoot = useCallback(() => {
+    setWipe(true);
+    setTimeout(() => {
+      sessionStorage.setItem(BOOT_SESSION_KEY, "1");
+      setVisible(false);
+      doneRef.current(true);
+    }, WIPE_DURATION);
+  }, []);
+
+  const handleTimeUpdate = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    const cur = v.currentTime;
+    const dur = v.duration || 20;
+    setCurrentTime(cur);
+    setVideoDuration(dur);
+    const p = Math.min(100, Math.round((cur / dur) * 100));
+    setProgress(p);
+
+    if (p < 20) {
+      setStatus("BIOMETRIC ACCESS GRANTED // INITIALIZING CORE");
+    } else if (p < 50) {
+      setStatus("DECRYPTING 20 HACKATHON CHALLENGES...");
+    } else if (p < 75) {
+      setStatus("CALIBRATING JAVA & PYTHON BENCHMARKS...");
+    } else if (p < 95) {
+      setStatus("SYNCHRONIZING CASE STUDY MATRIX...");
+    } else {
+      setStatus("REVEAL ENGINE OPERATIONAL");
+    }
+  };
+
+  const toggleMute = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    setMuted(v.muted);
+  };
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${String(s).padStart(2, "0")}`;
+  };
+
   const activate = useCallback(
     (points: { x: number; y: number }[]) => {
       if (activeRef.current) return;
@@ -119,60 +171,20 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
       setPhase(1);
       setLockedFingers([true, true, true, true, true]);
       points.forEach((p) => addRipple(p.x, p.y, true));
+      setStatus("BIOMETRIC ACCESS GRANTED // INITIALIZING");
 
-      const pool = shuffled(LOG_POOL);
-      const start = performance.now();
-
-      /* status beats */
-      PHASE_1_STATUS.forEach((text, i) =>
-        later(() => setStatus(text), (PHASE_1_DURATION / PHASE_1_STATUS.length) * i + 60),
-      );
-      later(() => setPhase(2), PHASE_1_DURATION);
-      const p2 = TOTAL_ACTIVATION_DURATION - PHASE_1_DURATION;
-      PHASE_2_STATUS.forEach((text, i) =>
-        later(() => setStatus(text), PHASE_1_DURATION + (p2 / PHASE_2_STATUS.length) * i + 60),
-      );
-
-      /* glitch bursts */
-      [PHASE_1_DURATION, PHASE_1_DURATION + p2 * 0.35, PHASE_1_DURATION + p2 * 0.68].forEach(
-        (at, i) => {
-          later(() => {
-            setGlitch(true);
-            later(() => setGlitch(false), 120 + i * 40);
-          }, at);
-        },
-      );
-
-      /* log stream */
-      let li = 0;
-      const pushLine = () => {
-        const line = pool[li % pool.length]!;
-        li += 1;
-        setLines((prev) => [...prev.slice(-11), { id: li, text: line }]);
-        const elapsed = performance.now() - start;
-        const t = Math.min(1, elapsed / TOTAL_ACTIVATION_DURATION);
-        if (elapsed < TOTAL_ACTIVATION_DURATION - 400) {
-          later(pushLine, 460 - t * 340);
+      // Auto-play the 20-second video as the loading transmission
+      setTimeout(() => {
+        const v = videoRef.current;
+        if (v) {
+          v.muted = false;
+          v.play().catch(() => {
+            v.muted = true;
+            setMuted(true);
+            v.play().catch(() => {});
+          });
         }
-      };
-      pushLine();
-
-      /* progress counter */
-      const tick = () => {
-        const t = Math.min(1, (performance.now() - start) / TOTAL_ACTIVATION_DURATION);
-        const eased = t < 0.5 ? t * 1.5 : 0.75 + (t - 0.5) * 0.5;
-        setProgress(Math.min(100, Math.round((t < 0.98 ? eased : 1) * 100)));
-        if (t < 1) rafRef.current = requestAnimationFrame(tick);
-      };
-      rafRef.current = requestAnimationFrame(tick);
-
-      /* hand off to the site */
-      later(() => setWipe(true), TOTAL_ACTIVATION_DURATION);
-      later(() => {
-        sessionStorage.setItem(BOOT_SESSION_KEY, "1");
-        setVisible(false);
-        doneRef.current(true);
-      }, TOTAL_ACTIVATION_DURATION + WIPE_DURATION);
+      }, 50);
     },
     [addRipple],
   );
@@ -421,7 +433,9 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
 
       {/* MAIN BOOT FRAME */}
       <div
-        className={`boot-frame relative z-10 w-[min(94vw,56rem)] rounded-lg border border-primary/30 bg-card/40 p-5 backdrop-blur-md sm:p-9 ${
+        className={`boot-frame relative z-10 ${
+          active ? "w-[min(96vw,58rem)] p-3.5 sm:p-5" : "w-[min(94vw,56rem)] p-5 sm:p-9"
+        } rounded-lg border border-primary/30 bg-card/40 backdrop-blur-md ${
           glitch ? "boot-glitch" : ""
         }`}
         style={{
@@ -679,34 +693,62 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
             </div>
           </div>
         ) : (
-          /* ACTIVE BOOT TERMINAL */
-          <div className="text-left">
-            <div className="flex items-center justify-between border-b border-primary/20 pb-3">
-              <p className="display text-sm tracking-[0.35em] text-primary sm:text-lg">{status}</p>
-              <span className="font-mono text-xs text-primary/70">5/5 NODES VERIFIED</span>
+          /* ACTIVE VIDEO LOADING TRANSMISSION (20 SECONDS) */
+          <div className="flex flex-col w-full text-left">
+            {/* Header HUD */}
+            <div className="flex flex-wrap items-center justify-between border-b border-primary/30 pb-3 gap-2">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
+                <p className="display text-xs tracking-[0.25em] text-primary sm:text-sm">{status}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={toggleMute}
+                  className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                >
+                  {muted ? <VolumeX className="h-3.5 w-3.5 text-accent" /> : <Volume2 className="h-3.5 w-3.5 text-primary" />}
+                  <span className="hidden sm:inline">{muted ? "MUTED" : "UNMUTE"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={finishBoot}
+                  className="flex items-center gap-1.5 rounded-full border border-primary/50 bg-primary/20 px-3 py-1 font-mono text-[0.7rem] text-primary hover:bg-primary hover:text-black transition-all cursor-pointer shadow-[0_0_12px_var(--gold)]"
+                >
+                  <span>SKIP LOADING</span>
+                  <SkipForward className="h-3 w-3" />
+                </button>
+              </div>
             </div>
 
-            <div className="mt-5 h-40 overflow-hidden font-mono text-[0.68rem] leading-relaxed text-accent/85 sm:h-48 sm:text-xs">
-              {lines.map((l) => (
-                <div key={l.id} className="boot-line">
-                  {l.text}
-                </div>
-              ))}
+            {/* Video Player */}
+            <div className="relative mt-3 aspect-video w-full overflow-hidden rounded-lg border border-primary/40 bg-black shadow-[0_0_40px_rgba(218,165,32,0.2)]">
+              <video
+                ref={videoRef}
+                src="/aavishkara-short.mp4"
+                playsInline
+                autoPlay
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={finishBoot}
+                className="h-full w-full object-contain"
+              />
+              <div className="pointer-events-none absolute inset-0 opacity-15 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:100%_4px]" />
             </div>
 
-            <div className="mt-6 flex items-center gap-4">
-              <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-border">
+            {/* Footer Progress Bar */}
+            <div className="mt-3.5 flex items-center gap-4">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-border/60 border border-primary/20">
                 <div
-                  className="h-full rounded-full bg-primary shadow-[var(--glow-gold)]"
+                  className="h-full rounded-full bg-gradient-to-r from-primary via-gold-soft to-primary shadow-[var(--glow-gold)]"
                   style={{ width: `${progress}%`, transition: "width 120ms linear" }}
                 />
               </div>
-              <span className="display w-14 text-right text-xs text-primary">{progress}%</span>
+              <span className="font-mono text-xs text-primary font-bold tracking-wider">{progress}%</span>
             </div>
 
-            <div className="mt-3 flex items-center justify-between text-[0.6rem] tracking-[0.32em] text-muted-foreground">
-              <span>{phase === 1 ? "PHASE 01 — POWER-UP" : "PHASE 02 — BOOST"}</span>
-              <span>AVK26_CORE_READY</span>
+            <div className="mt-2 flex items-center justify-between font-mono text-[0.65rem] tracking-[0.25em] text-muted-foreground">
+              <span>{formatTime(currentTime)} / {formatTime(videoDuration)}</span>
+              <span>AAVISHKARA &apos;26 // CASE STUDY REVEAL</span>
             </div>
           </div>
         )}
