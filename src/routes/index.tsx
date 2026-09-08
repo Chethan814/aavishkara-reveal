@@ -15,13 +15,15 @@ import { SoundToggle } from "@/components/reveal/SoundToggle";
 import { MagneticButton } from "@/components/reveal/MagneticButton";
 import { caseStudies } from "@/data/caseStudies";
 import { EASE, HERO_LOGO_DELAY } from "@/lib/motion";
-import titleCard from "@/assets/aavishkara-title-card.png.asset.json";
-import akMark from "@/assets/aavishkara-ak-mark.png.asset.json";
-import trustLogo from "@/assets/soundarya-trust.png.asset.json";
-import iicLogo from "@/assets/iic-logo.png.asset.json";
 import doorway from "@/assets/doorway.jpg";
 import { BootSequence } from "@/components/reveal/BootSequence";
 import { registerBootPreload } from "@/lib/boot-preload";
+
+/* Local paths served from public/ folder */
+const titleCard = { url: "/aavishkara-title-card.png" };
+const akMark = { url: "/aavishkara-ak-mark.png" };
+const trustLogo = { url: "/soundarya-trust.png" };
+const iicLogo = { url: "/iic-logo.png" };
 
 /* warm every downstream image while the boot sequence plays */
 registerBootPreload([titleCard.url, akMark.url, trustLogo.url, iicLogo.url, doorway]);

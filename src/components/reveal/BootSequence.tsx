@@ -65,10 +65,15 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
   const [glitch, setGlitch] = useState(false);
   const [wipe, setWipe] = useState(false);
   const [ripples, setRipples] = useState<Ripple[]>([]);
+  const [charge, setCharge] = useState(0); // 0–1 hold charge for visual feedback
 
   const rippleId = useRef(0);
   const activeRef = useRef(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdStart = useRef(0);
+  const chargeRaf = useRef(0);
+  const touchAccum = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const accumTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const rafRef = useRef(0);
   const doneRef = useRef(onDone);
@@ -167,41 +172,129 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     if (!visible) return;
 
+    /** Detect a palm by checking touch radius — palms have area > ~30px radius */
+    const isPalm = (t: Touch) => (t.radiusX ?? 0) > 25 || (t.radiusY ?? 0) > 25;
+
+    /** Start a smooth charge animation toward activation */
+    const startCharge = (x: number, y: number, durationMs: number) => {
+      holdStart.current = performance.now();
+      const tick = () => {
+        const elapsed = performance.now() - holdStart.current;
+        const t = Math.min(1, elapsed / durationMs);
+        setCharge(t);
+        if (t < 1 && !activeRef.current) {
+          chargeRaf.current = requestAnimationFrame(tick);
+        }
+      };
+      chargeRaf.current = requestAnimationFrame(tick);
+      holdTimer.current = setTimeout(
+        () => activate([{ x, y }]),
+        durationMs,
+      );
+    };
+
+    const cancelCharge = () => {
+      if (holdTimer.current) clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+      cancelAnimationFrame(chargeRaf.current);
+      setCharge(0);
+      holdStart.current = 0;
+    };
+
     const onTouchStart = (e: TouchEvent) => {
       if (activeRef.current) return;
-      if (e.touches.length >= 2) {
-        activate(
-          Array.from(e.touches).map((t) => ({ x: t.clientX, y: t.clientY })),
-        );
-      } else {
-        const t = e.touches[0];
-        if (t) addRipple(t.clientX, t.clientY, false);
+
+      /* Accumulate all touch points across the event */
+      for (const t of Array.from(e.touches)) {
+        touchAccum.current.set(t.identifier, { x: t.clientX, y: t.clientY });
+        addRipple(t.clientX, t.clientY, false);
       }
+
+      /* Instant activation: palm detected (large touch area) */
+      const palmTouch = Array.from(e.touches).find(isPalm);
+      if (palmTouch) {
+        const points = Array.from(touchAccum.current.values());
+        touchAccum.current.clear();
+        if (accumTimer.current) clearTimeout(accumTimer.current);
+        activate(points.length > 0 ? points : [{ x: palmTouch.clientX, y: palmTouch.clientY }]);
+        return;
+      }
+
+      /* Instant activation: 3+ simultaneous touch points (full hand) */
+      if (touchAccum.current.size >= 3) {
+        const points = Array.from(touchAccum.current.values());
+        touchAccum.current.clear();
+        if (accumTimer.current) clearTimeout(accumTimer.current);
+        activate(points);
+        return;
+      }
+
+      /* 2 points — activate immediately */
+      if (touchAccum.current.size >= 2) {
+        const points = Array.from(touchAccum.current.values());
+        touchAccum.current.clear();
+        if (accumTimer.current) clearTimeout(accumTimer.current);
+        activate(points);
+        return;
+      }
+
+      /* Single touch — start a hold-charge for single finger fallback.
+         Also set a short accumulation window in case more fingers land soon */
+      if (!accumTimer.current && !holdTimer.current) {
+        const t = e.touches[0]!;
+        startCharge(t.clientX, t.clientY, HOLD_FALLBACK_DURATION);
+        accumTimer.current = setTimeout(() => {
+          accumTimer.current = null;
+        }, 600);
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (activeRef.current) return;
+      /* Track new fingers arriving mid-gesture */
+      for (const t of Array.from(e.touches)) {
+        if (!touchAccum.current.has(t.identifier)) {
+          touchAccum.current.set(t.identifier, { x: t.clientX, y: t.clientY });
+          addRipple(t.clientX, t.clientY, false);
+        }
+      }
+      /* If we now have enough points, trigger */
+      if (touchAccum.current.size >= 2) {
+        cancelCharge();
+        const points = Array.from(touchAccum.current.values());
+        touchAccum.current.clear();
+        if (accumTimer.current) clearTimeout(accumTimer.current);
+        activate(points);
+      }
+    };
+
+    const onTouchEnd = () => {
+      touchAccum.current.clear();
+      cancelCharge();
     };
 
     const onMouseDown = (e: MouseEvent) => {
       if (activeRef.current) return;
       addRipple(e.clientX, e.clientY, false);
-      holdTimer.current = setTimeout(
-        () => activate([{ x: e.clientX, y: e.clientY }]),
-        HOLD_FALLBACK_DURATION,
-      );
-    };
-    const cancelHold = () => {
-      if (holdTimer.current) clearTimeout(holdTimer.current);
-      holdTimer.current = null;
+      startCharge(e.clientX, e.clientY, HOLD_FALLBACK_DURATION);
     };
 
     window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("touchcancel", onTouchEnd);
     window.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("mouseup", cancelHold);
-    window.addEventListener("mouseleave", cancelHold);
+    window.addEventListener("mouseup", cancelCharge);
+    window.addEventListener("mouseleave", cancelCharge);
     return () => {
       window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
       window.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("mouseup", cancelHold);
-      window.removeEventListener("mouseleave", cancelHold);
-      cancelHold();
+      window.removeEventListener("mouseup", cancelCharge);
+      window.removeEventListener("mouseleave", cancelCharge);
+      cancelCharge();
     };
   }, [visible, activate, addRipple]);
 
@@ -209,6 +302,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
     () => () => {
       timers.current.forEach(clearTimeout);
       cancelAnimationFrame(rafRef.current);
+      cancelAnimationFrame(chargeRaf.current);
     },
     [],
   );
@@ -237,13 +331,33 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
         }}
       >
         {!active ? (
-          <div className="flex flex-col items-center gap-7 py-10 text-center">
-            <Hand className="boot-hand h-16 w-16 text-primary sm:h-20 sm:w-20" strokeWidth={1.25} />
-            <p className="display text-xs tracking-[0.42em] text-foreground/85 sm:text-base">
-              Place your hand on screen to begin
+          <div className={`boot-idle-content flex flex-col items-center gap-7 py-10 text-center ${charge > 0 ? 'boot-charging' : ''}`}>
+            <div className="boot-hand-zone">
+              <span className="boot-hand-ring" aria-hidden />
+              <span className="boot-hand-ring" aria-hidden />
+              <span className="boot-hand-ring" aria-hidden />
+              {/* charge indicator ring */}
+              {charge > 0 && (
+                <svg className="boot-charge-svg" viewBox="0 0 100 100" aria-hidden>
+                  <circle
+                    cx="50" cy="50" r="46"
+                    fill="none"
+                    stroke="oklch(0.82 0.16 85 / 80%)"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeDasharray={`${charge * 289} 289`}
+                    transform="rotate(-90 50 50)"
+                    style={{ filter: 'drop-shadow(0 0 6px oklch(0.82 0.16 85 / 60%))' }}
+                  />
+                </svg>
+              )}
+              <Hand className="boot-hand h-16 w-16 text-primary sm:h-20 sm:w-20" strokeWidth={1.25} />
+            </div>
+            <p className="display boot-hand-shimmer text-xs tracking-[0.42em] text-foreground/85 sm:text-base">
+              {charge > 0 ? 'SENSING...' : 'Place your hand on screen to begin'}
             </p>
             <p className="text-[0.6rem] tracking-[0.3em] text-muted-foreground">
-              Two or more points of contact required
+              Touch with full palm or hold to activate
             </p>
           </div>
         ) : (
