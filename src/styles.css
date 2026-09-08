@@ -391,3 +391,69 @@
   .mouse-depth,
   .ambient-grid { transform: none; }
 }
+
+/* ---------- boot sequence ---------- */
+@keyframes boot-grid-drift { to { background-position: 0 240px, 240px 0, 0 0; } }
+@keyframes boot-scan-move { from { transform: translateY(-30%); } to { transform: translateY(130%); } }
+@keyframes boot-hand-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px oklch(0.82 0.16 85 / 35%)); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 28px oklch(0.82 0.16 85 / 70%)); }
+}
+@keyframes boot-line-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes boot-ripple-out {
+  from { opacity: 0.9; transform: translate(-50%, -50%) scale(0.2); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes boot-glitch-shift {
+  0%, 100% { transform: none; filter: none; }
+  25% { transform: translate3d(-3px, 1px, 0); filter: hue-rotate(25deg) brightness(1.5); }
+  60% { transform: translate3d(4px, -2px, 0); filter: brightness(0.8) contrast(1.4); }
+}
+@keyframes boot-wipe {
+  0% { opacity: 1; clip-path: inset(0 0 0 0); }
+  35% { opacity: 1; background: oklch(0.98 0.01 90); }
+  100% { opacity: 0; clip-path: inset(0 0 100% 0); }
+}
+
+.boot-grid {
+  background-image:
+    linear-gradient(to bottom, oklch(0.65 0.21 295 / 10%) 1px, transparent 1px),
+    linear-gradient(to right, oklch(0.65 0.21 295 / 10%) 1px, transparent 1px),
+    radial-gradient(ellipse at center, oklch(0.82 0.16 85 / 7%), transparent 65%);
+  background-size: 60px 60px, 60px 60px, 100% 100%;
+  animation: boot-grid-drift 22s linear infinite;
+  opacity: 0.5;
+  transition: opacity 1.2s var(--ease-cinematic), filter 1.2s var(--ease-cinematic);
+}
+.boot-grid-hot { opacity: 1; filter: brightness(1.7); animation-duration: 7s; }
+.boot-scan {
+  background: linear-gradient(to bottom, transparent, oklch(0.82 0.16 85 / 10%), transparent);
+  height: 34%;
+  animation: boot-scan-move 7s linear infinite;
+  pointer-events: none;
+}
+.boot-scan-hot { animation-duration: 2.4s; }
+.boot-hand { animation: boot-hand-pulse 2.2s var(--ease-cinematic) infinite; }
+.boot-line { animation: boot-line-in 0.25s var(--ease-cinematic) both; }
+.boot-glitch { animation: boot-glitch-shift 0.16s steps(2) 2; }
+.boot-ripple {
+  position: fixed;
+  width: 160px;
+  height: 160px;
+  border-radius: 9999px;
+  pointer-events: none;
+  border: 1px solid oklch(0.82 0.16 85 / 70%);
+  box-shadow: 0 0 30px oklch(0.82 0.16 85 / 45%);
+  animation: boot-ripple-out 0.7s var(--ease-cinematic) forwards;
+}
+.boot-ripple-big {
+  width: 620px;
+  height: 620px;
+  border-width: 2px;
+  background: radial-gradient(circle, oklch(0.98 0.01 90 / 35%), transparent 62%);
+  animation-duration: 1.1s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot-grid, .boot-scan, .boot-hand { animation: none; }
+}
