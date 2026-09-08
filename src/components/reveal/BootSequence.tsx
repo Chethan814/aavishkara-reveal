@@ -166,6 +166,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
   /* input handling */
   useEffect(() => {
     if (!visible) return;
+    console.log("[boot] attach");
 
     const onTouchStart = (e: TouchEvent) => {
       if (activeRef.current) return;
@@ -203,6 +204,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
       window.removeEventListener("mouseup", cancelHold);
       window.removeEventListener("mouseleave", cancelHold);
       cancelHold();
+      console.log("[boot] detach");
     };
   }, [visible, activate, addRipple]);
 
