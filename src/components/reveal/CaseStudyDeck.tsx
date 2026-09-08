@@ -38,7 +38,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
 
   useEffect(
     () => () => {
-      timersRef.current.forEach(window.clearTimeout);
+      timersRef.current.forEach((id) => window.clearTimeout(id));
       timersRef.current = [];
     },
     [],

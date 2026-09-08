@@ -5,7 +5,7 @@ import { a as AnimatePresence, n as useMotionValue, r as useScroll, t as useSpri
 import { t as motion } from "../_libs/motion.mjs";
 import { _ as ChevronDown, a as Terminal, b as ArrowLeft, c as ShieldCheck, d as Play, f as Lock, g as Copy, h as Funnel, i as Volume2, l as ShieldAlert, m as Grid3x3, n as Wrench, o as Sparkles, p as Layers, r as VolumeX, s as SkipForward, t as X, u as Search, v as Check, y as ArrowRight } from "../_libs/lucide-react.mjs";
 import { t as Lenis } from "../_libs/lenis.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-zlNX5tdl.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-B1xYp5cX.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function SmoothScroll() {
@@ -848,7 +848,7 @@ function CaseStudyDeck({ studies }) {
 		timersRef.current.push(id);
 	}, []);
 	(0, import_react.useEffect)(() => () => {
-		timersRef.current.forEach(window.clearTimeout);
+		timersRef.current.forEach((id) => window.clearTimeout(id));
 		timersRef.current = [];
 	}, []);
 	const languageTracks = (0, import_react.useMemo)(() => {
@@ -3755,7 +3755,7 @@ function Reveal() {
 			behavior: "instant"
 		});
 	};
-	useEffect(() => {
+	(0, import_react.useEffect)(() => {
 		if (!booting) {
 			const resetScrollToTop = () => {
 				window.scrollTo({
