@@ -559,6 +559,53 @@
   scrollbar-width: none;
 }
 
+/* Biometric Hand Scanner & Multi-Finger Detection */
+@keyframes finger-bracket-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes finger-bracket-spin-rev {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes finger-ping-ring {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes palm-radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.finger-reticle-spin {
+  animation: finger-bracket-spin 10s linear infinite;
+}
+.finger-reticle-spin-fast {
+  animation: finger-bracket-spin-rev 6s linear infinite;
+}
+.finger-pulse-ring {
+  animation: finger-ping-ring 1.8s var(--ease-cinematic) infinite;
+}
+.palm-radar-sweep {
+  transform-origin: center;
+  animation: palm-radar-sweep 4s linear infinite;
+}
+
+.bio-finger-path {
+  transition: stroke 0.25s ease, fill 0.25s ease, filter 0.25s ease, opacity 0.25s ease;
+}
+.bio-finger-active {
+  stroke: oklch(0.82 0.16 85) !important;
+  fill: oklch(0.82 0.16 85 / 24%) !important;
+  filter: drop-shadow(0 0 10px oklch(0.82 0.16 85 / 90%)) drop-shadow(0 0 20px oklch(0.82 0.16 85 / 50%)) !important;
+  opacity: 1 !important;
+}
+.bio-finger-inactive {
+  stroke: oklch(0.82 0.16 85 / 30%);
+  fill: oklch(0.82 0.16 85 / 4%);
+  opacity: 0.6;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .boot-grid, .boot-scan, .boot-hand, .boot-hand-ring, .boot-hand-shimmer { animation: none; }
 }
