@@ -65,6 +65,25 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     [studies.length, track],
   );
 
+  const jumpTo = useCallback(
+    (target: number) => {
+      if (busyRef.current || target === indexRef.current) return;
+      if (target < 0 || target >= studies.length) return;
+      busyRef.current = true;
+      playSound("portal");
+      setTransitioning(true);
+      track(window.setTimeout(() => setIndex(target), PORTAL_SWAP));
+      track(
+        window.setTimeout(() => {
+          setTransitioning(false);
+          busyRef.current = false;
+          timersRef.current = [];
+        }, PORTAL_TOTAL),
+      );
+    },
+    [studies.length, track],
+  );
+
   /* auto-shrink the panel so a whole case study fits one screen; on very small
      screens stop shrinking (it would be unreadable) and scroll inside instead */
   useEffect(() => {
@@ -302,19 +321,39 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
             Previous
           </MagneticButton>
 
+          {/* Quick jump pills */}
+          <div className="hidden lg:flex max-w-xl flex-wrap items-center justify-center gap-1">
+            {studies.map((s, idx) => (
+              <button
+                key={s.code || idx}
+                type="button"
+                onClick={() => jumpTo(idx)}
+                disabled={transitioning}
+                title={`${s.code}: ${s.title}`}
+                className={`rounded px-1.5 py-0.5 font-mono text-[0.65rem] transition-all ${
+                  idx === index
+                    ? "bg-primary font-bold text-primary-foreground shadow-[0_0_12px_var(--gold)]"
+                    : "border border-border/40 bg-card/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                }`}
+              >
+                {s.code || String(idx + 1).padStart(2, "0")}
+              </button>
+            ))}
+          </div>
+
           <MagneticButton
             onClick={() => go(1)}
             disabled={isLast || transitioning}
             ariaLabel="Next case study"
           >
-            {isLast ? "All Twelve Revealed" : "Next Case Study"}
+            {isLast ? "All Twenty Revealed" : "Next Case Study"}
             <ArrowRight className="h-5 w-5" />
           </MagneticButton>
         </div>
         <p className="display text-[0.6rem] tracking-[0.35em] text-muted-foreground sm:text-xs">
           {isLast
             ? "Scroll down to continue"
-            : "Use the buttons, arrow keys, spacebar or swipe"}
+            : "Use buttons, jump pills, arrow keys, spacebar or swipe"}
         </p>
       </div>
     </section>

@@ -24,20 +24,32 @@ export function SectionDivider() {
 export function CaseStudyPanel({ study, index }: { study: CaseStudy; index: number }) {
   return (
     <div className="mx-auto w-full max-w-5xl">
-      <motion.p
+      <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.08, ease: EASE }}
-        className="display text-xs tracking-[0.4em] text-accent sm:text-sm"
+        className="flex flex-wrap items-center gap-2.5 sm:gap-3"
       >
-        {study.category}
-      </motion.p>
+        {study.code && (
+          <span className="rounded border border-primary/50 bg-primary/15 px-2.5 py-0.5 font-mono text-[0.7rem] font-bold tracking-widest text-primary shadow-[0_0_15px_-4px_var(--gold)] sm:text-xs">
+            {study.code}
+          </span>
+        )}
+        {study.language && (
+          <span className="rounded border border-accent/40 bg-accent/15 px-2.5 py-0.5 font-mono text-[0.7rem] tracking-wider text-accent sm:text-xs">
+            {study.language}
+          </span>
+        )}
+        <span className="display text-xs tracking-[0.35em] text-muted-foreground sm:text-sm">
+          {study.category}
+        </span>
+      </motion.div>
 
       <motion.h2
         initial={{ opacity: 0, y: 24, filter: "blur(10px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
         transition={{ duration: 0.55, delay: 0.14, ease: EASE }}
-        className="display text-glow-gold mt-1 text-2xl leading-tight text-primary sm:text-4xl lg:text-5xl"
+        className="display text-glow-gold mt-1.5 text-2xl leading-tight text-primary sm:text-3xl lg:text-4xl"
       >
         <span className="text-gold-soft/70">{pad(index + 1)}</span>{" "}
         <span>{study.title}</span>
@@ -49,9 +61,9 @@ export function CaseStudyPanel({ study, index }: { study: CaseStudy; index: numb
         transition={{ duration: 0.45, delay: 0.18, ease: EASE }}
         className="mt-3 max-w-4xl sm:mt-3.5"
       >
-        <h3 className="display text-xs tracking-[0.35em] text-primary sm:text-sm">Context</h3>
+        <h3 className="display text-xs tracking-[0.35em] text-primary sm:text-sm">Brief</h3>
         <p className="mt-1 text-sm leading-relaxed text-foreground/80 sm:text-base">
-          {study.context}
+          {study.brief || study.context}
         </p>
       </motion.div>
 
@@ -67,22 +79,48 @@ export function CaseStudyPanel({ study, index }: { study: CaseStudy; index: numb
         <p className="mt-1 text-base font-medium leading-snug text-foreground sm:text-lg lg:text-xl">{study.problem}</p>
       </motion.div>
 
+      {study.keyFeatures && study.keyFeatures.length > 0 && (
+        <div className="mt-3 sm:mt-3.5">
+          <motion.h3
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.35, delay: 0.26 }}
+            className="display text-xs tracking-[0.35em] text-primary sm:text-sm"
+          >
+            Key Features
+          </motion.h3>
+          <div className="mt-1.5 flex flex-wrap gap-1.5 sm:gap-2">
+            {study.keyFeatures.map((kf, i) => (
+              <motion.span
+                key={kf}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.28 + i * 0.03, ease: EASE }}
+                className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs text-foreground/90 shadow-[0_0_10px_-4px_var(--gold)]"
+              >
+                {kf}
+              </motion.span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="mt-3 sm:mt-3.5">
         <motion.h3
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.35, delay: 0.28 }}
+          transition={{ duration: 0.35, delay: 0.3 }}
           className="display text-xs tracking-[0.35em] text-primary sm:text-sm"
         >
-          Requirements &amp; Constraints
+          Constraints
         </motion.h3>
         <ul className="mt-1.5 grid gap-1.5 lg:grid-cols-2">
-          {study.requirements.map((item, i) => (
+          {(study.constraints || study.requirements).map((item, i) => (
             <motion.li
               key={item}
               initial={{ opacity: 0, x: -14 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: 0.32 + i * 0.05, ease: EASE }}
+              transition={{ duration: 0.4, delay: 0.32 + i * 0.04, ease: EASE }}
               className="flex gap-2.5 text-xs leading-relaxed text-foreground/85 sm:text-sm"
             >
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
@@ -93,24 +131,16 @@ export function CaseStudyPanel({ study, index }: { study: CaseStudy; index: numb
       </div>
 
       <div className="mt-3 sm:mt-3.5">
-        <motion.h3
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.35, delay: 0.36 }}
-          className="display text-xs tracking-[0.35em] text-primary sm:text-sm"
-        >
-          Evaluation Focus
-        </motion.h3>
-        <div className="mt-1.5 grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2">
           {[
-            ["Real-World Impact", study.impact],
-            ["Technical Depth", study.technical],
+            ["Outcome", study.outcome || study.impact],
+            ["Tools & Technologies", study.tools || study.technical],
           ].map(([title, points], i) => (
             <motion.div
               key={title as string}
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.4 + i * 0.07, ease: EASE }}
+              transition={{ duration: 0.45, delay: 0.38 + i * 0.07, ease: EASE }}
               className="rounded-md border border-accent/40 bg-card/60 p-3 shadow-[0_0_50px_-25px_var(--neon)] sm:p-3.5"
             >
               <h4 className="display text-xs tracking-[0.25em] text-accent sm:text-sm">

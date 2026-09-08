@@ -63,7 +63,7 @@ const FINGER_NAMES = [
   { id: 4, label: "PINKY", code: "PNK" },
 ];
 
-export function BootSequence({ onDone }: { onDone: () => void }) {
+export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void }) {
   const [visible, setVisible] = useState(true);
   const [active, setActive] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -101,7 +101,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     if (sessionStorage.getItem(BOOT_SESSION_KEY) === "1") {
       setVisible(false);
-      doneRef.current();
+      doneRef.current(false);
     }
   }, []);
 
@@ -171,7 +171,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
       later(() => {
         sessionStorage.setItem(BOOT_SESSION_KEY, "1");
         setVisible(false);
-        doneRef.current();
+        doneRef.current(true);
       }, TOTAL_ACTIVATION_DURATION + WIPE_DURATION);
     },
     [addRipple],

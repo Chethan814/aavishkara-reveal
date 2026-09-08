@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "motion/react";
-import { ChevronDown, Lock } from "lucide-react";
+import { ChevronDown, Lock, Play } from "lucide-react";
 
 import { SmoothScroll } from "@/components/reveal/SmoothScroll";
 import { Ambience } from "@/components/reveal/Ambience";
@@ -17,6 +17,7 @@ import { caseStudies } from "@/data/caseStudies";
 import { EASE, HERO_LOGO_DELAY } from "@/lib/motion";
 import doorway from "@/assets/doorway.jpg";
 import { BootSequence } from "@/components/reveal/BootSequence";
+import { CinematicTeaser } from "@/components/reveal/CinematicTeaser";
 import { registerBootPreload } from "@/lib/boot-preload";
 
 /* Local paths served from public/ folder */
@@ -92,6 +93,7 @@ function IBMWordmark() {
 
 function Reveal() {
   const [booting, setBooting] = useState(true);
+  const [playingVideo, setPlayingVideo] = useState(false);
 
   const beginStudies = () => {
     const deck = document.getElementById("case-deck");
@@ -101,7 +103,15 @@ function Reveal() {
     else deck.scrollIntoView({ behavior: "smooth" });
   };
 
-  if (booting) return <BootSequence onDone={() => setBooting(false)} />;
+  const handleBootDone = (fromScan?: boolean) => {
+    setBooting(false);
+    if (fromScan) {
+      setPlayingVideo(true);
+    }
+  };
+
+  if (booting) return <BootSequence onDone={handleBootDone} />;
+  if (playingVideo) return <CinematicTeaser onDone={() => setPlayingVideo(false)} />;
 
   return (
     <main className="relative w-full overflow-x-hidden bg-background text-foreground">
@@ -176,6 +186,23 @@ function Reveal() {
         <div className="display mt-8 min-h-[1.6em] text-sm tracking-[0.4em] text-foreground/80 sm:text-lg">
           <Typewriter text="Ideate. Innovate. Impact." delay={2600} speed={65} />
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 3.4, duration: 0.9, ease: EASE }}
+          className="mt-6 flex items-center justify-center"
+        >
+          <button
+            type="button"
+            onClick={() => setPlayingVideo(true)}
+            className="group flex items-center gap-2.5 rounded-full border border-primary/50 bg-card/70 px-4 py-2 font-mono text-xs text-primary shadow-[0_0_20px_-5px_var(--gold)] backdrop-blur-md transition-all hover:border-primary hover:bg-primary/20 hover:scale-105 cursor-pointer"
+            aria-label="Play Aavishkara Teaser Video"
+          >
+            <Play className="h-3.5 w-3.5 fill-primary transition-transform group-hover:scale-110" />
+            <span className="tracking-widest font-semibold">PLAY TEASER TRANSMISSION (0:20)</span>
+          </button>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0 }}
@@ -304,8 +331,8 @@ function Reveal() {
             className="absolute inset-y-0 left-0 z-20 w-40 bg-gradient-to-r from-transparent via-primary to-transparent blur-md"
           />
 
-          <h2 className="display text-glow-gold text-4xl leading-[0.95] text-primary sm:text-6xl md:text-7xl" aria-label="Twelve Problems">
-            {"Twelve Problems.".split("").map((letter, index) => (
+          <h2 className="display text-glow-gold text-4xl leading-[0.95] text-primary sm:text-6xl md:text-7xl" aria-label="Twenty Problems">
+            {"Twenty Problems.".split("").map((letter, index) => (
               <motion.span
                 key={`${letter}-${index}`}
                 initial={{ opacity: 0, filter: "brightness(3) blur(8px)" }}
@@ -345,18 +372,18 @@ function Reveal() {
             transition={{ duration: 0.6, delay: 1.55, ease: EASE }}
             className="mt-9 flex flex-col items-center gap-6"
           >
-            <div className="flex items-center gap-3" aria-label="12 challenges ahead">
-              {Array.from({ length: 12 }, (_, index) => (
+            <div className="flex items-center gap-1.5 sm:gap-2.5" aria-label={`${caseStudies.length} challenges ahead`}>
+              {Array.from({ length: caseStudies.length }, (_, index) => (
                 <motion.span
                   key={index}
                   initial={{ scaleY: 0, opacity: 0 }}
                   whileInView={{ scaleY: 1, opacity: index % 3 === 0 ? 1 : 0.45 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.35, delay: 1.6 + index * 0.045, ease: EASE }}
-                  className="h-5 w-px origin-bottom bg-primary"
+                  transition={{ duration: 0.35, delay: 1.4 + index * 0.025, ease: EASE }}
+                  className="h-4 w-px origin-bottom bg-primary sm:h-5"
                 />
               ))}
-              <span className="display ml-3 text-xs tracking-[0.38em] text-foreground/70 sm:text-sm">12 Challenges Ahead</span>
+              <span className="display ml-2 text-xs tracking-[0.38em] text-foreground/70 sm:ml-3 sm:text-sm">{caseStudies.length} Challenges Ahead</span>
             </div>
             <MagneticButton onClick={beginStudies} ariaLabel="Begin the case studies">
               Begin
@@ -366,7 +393,7 @@ function Reveal() {
         </div>
       </Section>
 
-      {/* 5 — THE 12 CASE STUDIES (button-controlled) */}
+      {/* 5 — THE 20 CASE STUDIES (button-controlled) */}
       <CaseStudyDeck studies={caseStudies} />
 
       {/* 6 — CLOSING */}
