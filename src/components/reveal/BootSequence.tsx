@@ -8,6 +8,7 @@ import {
   TOTAL_ACTIVATION_DURATION,
   WIPE_DURATION,
 } from "@/lib/motion";
+import { warmBootPreload } from "@/lib/boot-preload";
 
 const LOG_POOL = [
   "> init /sys/aavishkara/core.boot",
@@ -43,12 +44,6 @@ const PHASE_2_STATUS = [
   "SYSTEMS READY",
 ];
 
-/** Assets the hero + following sections need, warmed while the boot plays. */
-const PRELOAD: string[] = [];
-export function registerBootPreload(urls: string[]) {
-  PRELOAD.push(...urls);
-}
-
 function shuffled<T>(items: T[]) {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -57,8 +52,6 @@ function shuffled<T>(items: T[]) {
   }
   return copy;
 }
-
-console.log("[boot] module loaded");
 
 type Ripple = { id: number; x: number; y: number; big: boolean };
 
@@ -102,11 +95,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
   /* warm every downstream asset the moment the boot screen mounts */
   useEffect(() => {
     if (!visible) return;
-    PRELOAD.forEach((src) => {
-      const img = new Image();
-      img.decoding = "async";
-      img.src = src;
-    });
+    warmBootPreload();
   }, [visible]);
 
   const activate = useCallback(
@@ -177,7 +166,6 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
   /* input handling */
   useEffect(() => {
     if (!visible) return;
-    console.log("[boot] listeners attached");
 
     const onTouchStart = (e: TouchEvent) => {
       if (activeRef.current) return;

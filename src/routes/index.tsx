@@ -20,7 +20,8 @@ import akMark from "@/assets/aavishkara-ak-mark.png.asset.json";
 import trustLogo from "@/assets/soundarya-trust.png.asset.json";
 import iicLogo from "@/assets/iic-logo.png.asset.json";
 import doorway from "@/assets/doorway.jpg";
-import { BootSequence, registerBootPreload } from "@/components/reveal/BootSequence";
+import { BootSequence } from "@/components/reveal/BootSequence";
+import { registerBootPreload } from "@/lib/boot-preload";
 
 /* warm every downstream image while the boot sequence plays */
 registerBootPreload([titleCard.url, akMark.url, trustLogo.url, iicLogo.url, doorway]);
