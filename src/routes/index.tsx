@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { motion } from "motion/react";
 import { ChevronDown, Lock } from "lucide-react";
 
@@ -19,6 +20,10 @@ import akMark from "@/assets/aavishkara-ak-mark.png.asset.json";
 import trustLogo from "@/assets/soundarya-trust.png.asset.json";
 import iicLogo from "@/assets/iic-logo.png.asset.json";
 import doorway from "@/assets/doorway.jpg";
+import { BootSequence, registerBootPreload } from "@/components/reveal/BootSequence";
+
+/* warm every downstream image while the boot sequence plays */
+registerBootPreload([titleCard.url, akMark.url, trustLogo.url, iicLogo.url, doorway]);
 
 
 export const Route = createFileRoute("/")({
@@ -83,6 +88,8 @@ function IBMWordmark() {
 }
 
 function Reveal() {
+  const [booting, setBooting] = useState(true);
+
   const beginStudies = () => {
     const deck = document.getElementById("case-deck");
     if (!deck) return;
@@ -90,6 +97,8 @@ function Reveal() {
     if (lenis) lenis.scrollTo(deck, { duration: 1.1 });
     else deck.scrollIntoView({ behavior: "smooth" });
   };
+
+  if (booting) return <BootSequence onDone={() => setBooting(false)} />;
 
   return (
     <main className="relative w-full overflow-x-hidden bg-background text-foreground">
