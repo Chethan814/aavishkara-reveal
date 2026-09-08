@@ -58,6 +58,8 @@ function shuffled<T>(items: T[]) {
   return copy;
 }
 
+console.log("[boot] module loaded");
+
 type Ripple = { id: number; x: number; y: number; big: boolean };
 
 export function BootSequence({ onDone }: { onDone: () => void }) {
