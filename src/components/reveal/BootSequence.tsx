@@ -101,6 +101,7 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
   /* already played this session — hand off instantly */
   useEffect(() => {
     if (sessionStorage.getItem(BOOT_SESSION_KEY) === "1") {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       setVisible(false);
       doneRef.current(false);
     }
@@ -119,9 +120,11 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
 
   const finishBoot = useCallback(() => {
     setWipe(true);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     setTimeout(() => {
       sessionStorage.setItem(BOOT_SESSION_KEY, "1");
       setVisible(false);
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       doneRef.current(true);
     }, WIPE_DURATION);
   }, []);

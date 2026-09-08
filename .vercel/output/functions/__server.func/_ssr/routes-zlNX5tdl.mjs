@@ -5,11 +5,12 @@ import { a as AnimatePresence, n as useMotionValue, r as useScroll, t as useSpri
 import { t as motion } from "../_libs/motion.mjs";
 import { _ as ChevronDown, a as Terminal, b as ArrowLeft, c as ShieldCheck, d as Play, f as Lock, g as Copy, h as Funnel, i as Volume2, l as ShieldAlert, m as Grid3x3, n as Wrench, o as Sparkles, p as Layers, r as VolumeX, s as SkipForward, t as X, u as Search, v as Check, y as ArrowRight } from "../_libs/lucide-react.mjs";
 import { t as Lenis } from "../_libs/lenis.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-DiuyUJ8G.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-zlNX5tdl.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function SmoothScroll() {
 	(0, import_react.useEffect)(() => {
+		if (typeof window !== "undefined" && "scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
 		const lenis = new Lenis({
 			duration: 1.4,
 			easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -17,6 +18,12 @@ function SmoothScroll() {
 			touchMultiplier: 1.4
 		});
 		window.__lenis = lenis;
+		window.scrollTo({
+			top: 0,
+			left: 0,
+			behavior: "instant"
+		});
+		lenis.scrollTo(0, { immediate: true });
 		let frame = 0;
 		const raf = (time) => {
 			lenis.raf(time);
@@ -2763,6 +2770,11 @@ function BootSequence({ onDone }) {
 	}, []);
 	(0, import_react.useEffect)(() => {
 		if (sessionStorage.getItem("aavishkara-booted") === "1") {
+			window.scrollTo({
+				top: 0,
+				left: 0,
+				behavior: "instant"
+			});
 			setVisible(false);
 			doneRef.current(false);
 		}
@@ -2777,9 +2789,19 @@ function BootSequence({ onDone }) {
 	const [currentTime, setCurrentTime] = (0, import_react.useState)(0);
 	const finishBoot = (0, import_react.useCallback)(() => {
 		setWipe(true);
+		window.scrollTo({
+			top: 0,
+			left: 0,
+			behavior: "instant"
+		});
 		setTimeout(() => {
 			sessionStorage.setItem(BOOT_SESSION_KEY, "1");
 			setVisible(false);
+			window.scrollTo({
+				top: 0,
+				left: 0,
+				behavior: "instant"
+			});
 			doneRef.current(true);
 		}, 900);
 	}, []);
@@ -3680,8 +3702,9 @@ registerBootPreload([
 	iicLogo.url,
 	doorway_default
 ]);
-function Section({ children, className = "" }) {
+function Section({ children, className = "", id }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", {
+		id,
 		className: `relative z-10 flex min-h-screen w-full flex-col items-center justify-center px-6 py-24 text-center ${className}`,
 		children
 	});
@@ -3726,7 +3749,34 @@ function Reveal() {
 	};
 	const handleBootDone = () => {
 		setBooting(false);
+		window.scrollTo({
+			top: 0,
+			left: 0,
+			behavior: "instant"
+		});
 	};
+	useEffect(() => {
+		if (!booting) {
+			const resetScrollToTop = () => {
+				window.scrollTo({
+					top: 0,
+					left: 0,
+					behavior: "instant"
+				});
+				const lenis = window.__lenis;
+				if (lenis) lenis.scrollTo(0, { immediate: true });
+			};
+			resetScrollToTop();
+			const r1 = requestAnimationFrame(resetScrollToTop);
+			const t1 = setTimeout(resetScrollToTop, 50);
+			const t2 = setTimeout(resetScrollToTop, 200);
+			return () => {
+				cancelAnimationFrame(r1);
+				clearTimeout(t1);
+				clearTimeout(t2);
+			};
+		}
+	}, [booting]);
 	if (booting) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BootSequence, { onDone: handleBootDone });
 	if (playingVideo) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CinematicTeaser, { onDone: () => setPlayingVideo(false) });
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
@@ -3738,163 +3788,166 @@ function Reveal() {
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ScrollProgress, {}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CustomCursor, {}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SoundToggle, {}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Section, { children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
-					initial: {
-						opacity: 0,
-						y: 26
-					},
-					animate: {
-						opacity: 1,
-						y: 0
-					},
-					transition: {
-						delay: HERO_LOGO_DELAY,
-						duration: 1.1,
-						ease: EASE$1
-					},
-					className: "absolute left-5 top-5 sm:left-10 sm:top-10",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-						src: trustLogo.url,
-						alt: "Soundarya Educational Trust",
-						className: "hero-logo h-14 w-auto sm:h-20 lg:h-24"
-					})
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
-					initial: {
-						opacity: 0,
-						y: 26
-					},
-					animate: {
-						opacity: 1,
-						y: 0
-					},
-					transition: {
-						delay: HERO_LOGO_DELAY + .15,
-						duration: 1.1,
-						ease: EASE$1
-					},
-					className: "absolute right-5 top-5 sm:right-10 sm:top-10",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-						src: iicLogo.url,
-						alt: "Institution's Innovation Council",
-						className: "hero-logo h-10 w-auto mix-blend-screen sm:h-14 lg:h-16"
-					})
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.p, {
-					initial: { opacity: 0 },
-					animate: { opacity: 1 },
-					transition: {
-						delay: .4,
-						duration: 1.4,
-						ease: EASE$1
-					},
-					className: "display mb-8 text-[0.65rem] tracking-[0.55em] text-muted-foreground sm:text-xs",
-					children: "Soundarya Institute of Management and Science"
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
-					initial: {
-						opacity: 0,
-						filter: "blur(18px)",
-						scale: .96
-					},
-					animate: {
-						opacity: 1,
-						filter: "blur(0px)",
-						scale: 1
-					},
-					transition: {
-						delay: .9,
-						duration: 2.2,
-						ease: EASE$1
-					},
-					className: "mouse-depth",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-						className: "sr-only",
-						children: "Aavishkara ’26"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-						src: titleCard.url,
-						alt: "Aavishkara '26",
-						className: "w-[min(90vw,40rem)] sm:w-[min(85vw,52rem)] lg:w-[min(78vw,62rem)]",
-						style: { filter: "drop-shadow(0 0 40px rgba(245,184,0,0.22))" }
-					})]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
-					initial: {
-						opacity: 0,
-						scaleX: 0
-					},
-					animate: {
-						opacity: 1,
-						scaleX: 1
-					},
-					transition: {
-						delay: 2.2,
-						duration: 1.2,
-						ease: EASE$1
-					},
-					className: "mt-8 h-px w-52 bg-gradient-to-r from-transparent via-accent to-transparent shadow-[var(--glow-neon)] sm:w-72"
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "display mt-8 min-h-[1.6em] text-sm tracking-[0.4em] text-foreground/80 sm:text-lg",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Typewriter, {
-						text: "Ideate. Innovate. Impact.",
-						delay: 2600,
-						speed: 65
-					})
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
-					initial: {
-						opacity: 0,
-						y: 14
-					},
-					animate: {
-						opacity: 1,
-						y: 0
-					},
-					transition: {
-						delay: 3.4,
-						duration: .9,
-						ease: EASE$1
-					},
-					className: "mt-6 flex items-center justify-center",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						type: "button",
-						onClick: () => setPlayingVideo(true),
-						className: "group flex items-center gap-2.5 rounded-full border border-primary/50 bg-card/70 px-4 py-2 font-mono text-xs text-primary shadow-[0_0_20px_-5px_var(--gold)] backdrop-blur-md transition-all hover:border-primary hover:bg-primary/20 hover:scale-105 cursor-pointer",
-						"aria-label": "Play Aavishkara Teaser Video",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "h-3.5 w-3.5 fill-primary transition-transform group-hover:scale-110" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-							className: "tracking-widest font-semibold",
-							children: "PLAY TEASER TRANSMISSION (0:20)"
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Section, {
+				id: "hero",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
+						initial: {
+							opacity: 0,
+							y: 26
+						},
+						animate: {
+							opacity: 1,
+							y: 0
+						},
+						transition: {
+							delay: HERO_LOGO_DELAY,
+							duration: 1.1,
+							ease: EASE$1
+						},
+						className: "absolute left-5 top-5 sm:left-10 sm:top-10",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+							src: trustLogo.url,
+							alt: "Soundarya Educational Trust",
+							className: "hero-logo h-14 w-auto sm:h-20 lg:h-24"
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
+						initial: {
+							opacity: 0,
+							y: 26
+						},
+						animate: {
+							opacity: 1,
+							y: 0
+						},
+						transition: {
+							delay: HERO_LOGO_DELAY + .15,
+							duration: 1.1,
+							ease: EASE$1
+						},
+						className: "absolute right-5 top-5 sm:right-10 sm:top-10",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+							src: iicLogo.url,
+							alt: "Institution's Innovation Council",
+							className: "hero-logo h-10 w-auto mix-blend-screen sm:h-14 lg:h-16"
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.p, {
+						initial: { opacity: 0 },
+						animate: { opacity: 1 },
+						transition: {
+							delay: .4,
+							duration: 1.4,
+							ease: EASE$1
+						},
+						className: "display mb-8 text-[0.65rem] tracking-[0.55em] text-muted-foreground sm:text-xs",
+						children: "Soundarya Institute of Management and Science"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+						initial: {
+							opacity: 0,
+							filter: "blur(18px)",
+							scale: .96
+						},
+						animate: {
+							opacity: 1,
+							filter: "blur(0px)",
+							scale: 1
+						},
+						transition: {
+							delay: .9,
+							duration: 2.2,
+							ease: EASE$1
+						},
+						className: "mouse-depth",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+							className: "sr-only",
+							children: "Aavishkara ’26"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+							src: titleCard.url,
+							alt: "Aavishkara '26",
+							className: "w-[min(90vw,40rem)] sm:w-[min(85vw,52rem)] lg:w-[min(78vw,62rem)]",
+							style: { filter: "drop-shadow(0 0 40px rgba(245,184,0,0.22))" }
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
+						initial: {
+							opacity: 0,
+							scaleX: 0
+						},
+						animate: {
+							opacity: 1,
+							scaleX: 1
+						},
+						transition: {
+							delay: 2.2,
+							duration: 1.2,
+							ease: EASE$1
+						},
+						className: "mt-8 h-px w-52 bg-gradient-to-r from-transparent via-accent to-transparent shadow-[var(--glow-neon)] sm:w-72"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "display mt-8 min-h-[1.6em] text-sm tracking-[0.4em] text-foreground/80 sm:text-lg",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Typewriter, {
+							text: "Ideate. Innovate. Impact.",
+							delay: 2600,
+							speed: 65
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
+						initial: {
+							opacity: 0,
+							y: 14
+						},
+						animate: {
+							opacity: 1,
+							y: 0
+						},
+						transition: {
+							delay: 3.4,
+							duration: .9,
+							ease: EASE$1
+						},
+						className: "mt-6 flex items-center justify-center",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => setPlayingVideo(true),
+							className: "group flex items-center gap-2.5 rounded-full border border-primary/50 bg-card/70 px-4 py-2 font-mono text-xs text-primary shadow-[0_0_20px_-5px_var(--gold)] backdrop-blur-md transition-all hover:border-primary hover:bg-primary/20 hover:scale-105 cursor-pointer",
+							"aria-label": "Play Aavishkara Teaser Video",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "h-3.5 w-3.5 fill-primary transition-transform group-hover:scale-110" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "tracking-widest font-semibold",
+								children: "PLAY TEASER TRANSMISSION (0:20)"
+							})]
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+						initial: { opacity: 0 },
+						animate: { opacity: 1 },
+						transition: {
+							delay: 5,
+							duration: 1.4
+						},
+						className: "absolute bottom-10 flex flex-col items-center gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "display text-[0.6rem] tracking-[0.35em] text-muted-foreground sm:text-xs",
+							children: "Scroll to reveal the case study"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
+							animate: { y: [
+								0,
+								9,
+								0
+							] },
+							transition: {
+								duration: 1.9,
+								repeat: Infinity,
+								ease: "easeInOut"
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronDown, { className: "h-5 w-5 text-primary" })
 						})]
 					})
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
-					initial: { opacity: 0 },
-					animate: { opacity: 1 },
-					transition: {
-						delay: 5,
-						duration: 1.4
-					},
-					className: "absolute bottom-10 flex flex-col items-center gap-3",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "display text-[0.6rem] tracking-[0.35em] text-muted-foreground sm:text-xs",
-						children: "Scroll to reveal the case study"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
-						animate: { y: [
-							0,
-							9,
-							0
-						] },
-						transition: {
-							duration: 1.9,
-							repeat: Infinity,
-							ease: "easeInOut"
-						},
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronDown, { className: "h-5 w-5 text-primary" })
-					})]
-				})
-			] }),
+				]
+			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Section, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
 				initial: {
 					opacity: 0,

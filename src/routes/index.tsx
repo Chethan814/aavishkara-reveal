@@ -57,12 +57,15 @@ export const Route = createFileRoute("/")({
 function Section({
   children,
   className = "",
+  id,
 }: {
   children: React.ReactNode;
   className?: string;
+  id?: string;
 }) {
   return (
     <section
+      id={id}
       className={`relative z-10 flex min-h-screen w-full flex-col items-center justify-center px-6 py-24 text-center ${className}`}
     >
       {children}
@@ -105,7 +108,32 @@ function Reveal() {
 
   const handleBootDone = () => {
     setBooting(false);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   };
+
+  // When booting finishes, ensure the user starts at the Hero section at the top
+  useEffect(() => {
+    if (!booting) {
+      const resetScrollToTop = () => {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+        const lenis = (window as unknown as { __lenis?: { scrollTo: (target: number, options?: object) => void } }).__lenis;
+        if (lenis) {
+          lenis.scrollTo(0, { immediate: true });
+        }
+      };
+
+      resetScrollToTop();
+      const r1 = requestAnimationFrame(resetScrollToTop);
+      const t1 = setTimeout(resetScrollToTop, 50);
+      const t2 = setTimeout(resetScrollToTop, 200);
+
+      return () => {
+        cancelAnimationFrame(r1);
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [booting]);
 
   if (booting) return <BootSequence onDone={handleBootDone} />;
   if (playingVideo) return <CinematicTeaser onDone={() => setPlayingVideo(false)} />;
@@ -119,8 +147,8 @@ function Reveal() {
       <CustomCursor />
       <SoundToggle />
 
-      {/* 1 — OPENING */}
-      <Section>
+      {/* 1 — OPENING HERO */}
+      <Section id="hero">
         {/* corner institution logos */}
         <motion.div
           initial={{ opacity: 0, y: 26 }}
