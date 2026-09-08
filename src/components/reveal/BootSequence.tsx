@@ -61,10 +61,7 @@ function shuffled<T>(items: T[]) {
 type Ripple = { id: number; x: number; y: number; big: boolean };
 
 export function BootSequence({ onDone }: { onDone: () => void }) {
-  const [visible, setVisible] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return sessionStorage.getItem(BOOT_SESSION_KEY) !== "1";
-  });
+  const [visible, setVisible] = useState(true);
   const [active, setActive] = useState(false);
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<0 | 1 | 2>(0);
@@ -90,6 +87,14 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
     const id = (rippleId.current += 1);
     setRipples((r) => [...r, { id, x, y, big }]);
     setTimeout(() => setRipples((r) => r.filter((p) => p.id !== id)), big ? 1100 : 700);
+  }, []);
+
+  /* already played this session — hand off instantly */
+  useEffect(() => {
+    if (sessionStorage.getItem(BOOT_SESSION_KEY) === "1") {
+      setVisible(false);
+      doneRef.current();
+    }
   }, []);
 
   /* warm every downstream asset the moment the boot screen mounts */
