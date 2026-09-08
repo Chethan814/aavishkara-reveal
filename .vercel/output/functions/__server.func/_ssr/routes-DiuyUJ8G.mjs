@@ -3,9 +3,9 @@ import { n as registerBootPreload, r as warmBootPreload, t as doorway_default } 
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { a as AnimatePresence, n as useMotionValue, r as useScroll, t as useSpring } from "../_libs/framer-motion+[...].mjs";
 import { t as motion } from "../_libs/motion.mjs";
-import { a as Play, c as ArrowRight, i as ShieldCheck, l as ArrowLeft, n as Volume2, o as Lock, r as SkipForward, s as ChevronDown, t as VolumeX } from "../_libs/lucide-react.mjs";
+import { _ as ChevronDown, a as Terminal, b as ArrowLeft, c as ShieldCheck, d as Play, f as Lock, g as Copy, h as Funnel, i as Volume2, l as ShieldAlert, m as Grid3x3, n as Wrench, o as Sparkles, p as Layers, r as VolumeX, s as SkipForward, t as X, u as Search, v as Check, y as ArrowRight } from "../_libs/lucide-react.mjs";
 import { t as Lenis } from "../_libs/lenis.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-DJuc5MNP.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-DiuyUJ8G.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function SmoothScroll() {
@@ -362,11 +362,68 @@ function Typewriter({ text, delay = 0, speed = 70, className = "" }) {
 function pad(n) {
 	return String(n).padStart(2, "0");
 }
-/** A single case study, animated in on mount (used by the button-driven deck). */
-function CaseStudyPanel({ study, index }) {
+/** Single case study detail panel (used in Deck View) */
+function CaseStudyPanel({ study, index, total }) {
+	const [copied, setCopied] = (0, import_react.useState)(false);
+	const copyCode = () => {
+		if (!study.code) return;
+		navigator.clipboard.writeText(study.code);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 2e3);
+	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "mx-auto w-full max-w-5xl px-1 sm:px-3 pb-6",
+		className: "mx-auto w-full max-w-5xl rounded-2xl border border-primary/25 bg-card/85 p-4 sm:p-7 md:p-9 shadow-[0_0_60px_-25px_var(--gold)] backdrop-blur-md",
 		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-wrap items-center justify-between gap-2.5 pb-4 border-b border-border/50",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex flex-wrap items-center gap-2 sm:gap-2.5",
+					children: [
+						study.code && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: copyCode,
+							title: "Click to copy problem code",
+							className: "group flex items-center gap-1.5 rounded-md border border-primary/60 bg-primary/20 px-2.5 py-1 font-mono text-xs font-bold tracking-widest text-primary shadow-[0_0_15px_-4px_var(--gold)] transition-all hover:bg-primary hover:text-primary-foreground cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: study.code }), copied ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "h-3.5 w-3.5 text-green-400" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Copy, { className: "h-3 w-3 opacity-60 group-hover:opacity-100" })]
+						}),
+						study.language && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "rounded-md border border-accent/40 bg-accent/15 px-2.5 py-1 font-mono text-xs tracking-wider text-accent",
+							children: study.language
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "display text-xs tracking-[0.25em] text-muted-foreground",
+							children: study.category
+						})
+					]
+				}), total && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "display text-xs tracking-[0.3em] text-primary/80 font-mono",
+					children: [
+						pad(index + 1),
+						" / ",
+						pad(total)
+					]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.h2, {
+				initial: {
+					opacity: 0,
+					y: 14
+				},
+				animate: {
+					opacity: 1,
+					y: 0
+				},
+				transition: {
+					duration: .45,
+					delay: .05,
+					ease: EASE$1
+				},
+				className: "display text-glow-gold mt-4 text-2xl font-bold leading-snug text-primary sm:text-3xl md:text-4xl",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+					className: "text-gold-soft/60 mr-2 sm:mr-3",
+					children: [pad(index + 1), "."]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: study.title })]
+			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
 				initial: {
 					opacity: 0,
@@ -378,55 +435,25 @@ function CaseStudyPanel({ study, index }) {
 				},
 				transition: {
 					duration: .45,
-					delay: .08,
+					delay: .12,
 					ease: EASE$1
 				},
-				className: "flex flex-wrap items-center gap-2 sm:gap-3",
-				children: [
-					study.code && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "rounded border border-primary/60 bg-primary/20 px-2.5 py-0.5 font-mono text-[0.7rem] font-bold tracking-widest text-primary shadow-[0_0_15px_-4px_var(--gold)] sm:text-xs",
-						children: study.code
-					}),
-					study.language && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "rounded border border-accent/40 bg-accent/15 px-2.5 py-0.5 font-mono text-[0.7rem] tracking-wider text-accent sm:text-xs",
-						children: study.language
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "display text-xs tracking-[0.3em] text-muted-foreground sm:text-sm",
-						children: study.category
-					})
-				]
+				className: "mt-5 rounded-xl border-l-4 border-primary bg-gradient-to-r from-primary/15 via-primary/5 to-transparent p-4 sm:p-5 shadow-[0_0_35px_-20px_var(--gold)]",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-2 text-primary",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldAlert, { className: "h-4 w-4 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+						className: "display text-xs tracking-[0.3em] font-semibold text-primary uppercase",
+						children: "Problem Statement"
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "mt-2 text-sm sm:text-base md:text-lg font-medium leading-relaxed text-foreground",
+					children: study.problem
+				})]
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.h2, {
+			(study.brief || study.context) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
 				initial: {
 					opacity: 0,
-					y: 24,
-					filter: "blur(10px)"
-				},
-				animate: {
-					opacity: 1,
-					y: 0,
-					filter: "blur(0px)"
-				},
-				transition: {
-					duration: .55,
-					delay: .14,
-					ease: EASE$1
-				},
-				className: "display text-glow-gold mt-2 text-xl leading-snug text-primary sm:text-3xl lg:text-4xl",
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "text-gold-soft/70",
-						children: pad(index + 1)
-					}),
-					" ",
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: study.title })
-				]
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
-				initial: {
-					opacity: 0,
-					y: 16
+					y: 14
 				},
 				animate: {
 					opacity: 1,
@@ -437,19 +464,19 @@ function CaseStudyPanel({ study, index }) {
 					delay: .18,
 					ease: EASE$1
 				},
-				className: "mt-3 max-w-4xl sm:mt-4",
+				className: "mt-5",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
-					className: "display text-xs tracking-[0.35em] text-primary sm:text-sm",
+					className: "display text-xs tracking-[0.3em] text-primary uppercase",
 					children: "Brief"
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "mt-1 text-xs leading-relaxed text-foreground/85 sm:text-sm md:text-base",
+					className: "mt-1.5 text-xs sm:text-sm md:text-base leading-relaxed text-foreground/85",
 					children: study.brief || study.context
 				})]
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+			study.keyFeatures && study.keyFeatures.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
 				initial: {
 					opacity: 0,
-					y: 16
+					y: 14
 				},
 				animate: {
 					opacity: 1,
@@ -457,115 +484,155 @@ function CaseStudyPanel({ study, index }) {
 				},
 				transition: {
 					duration: .45,
-					delay: .24,
+					delay: .22,
 					ease: EASE$1
 				},
-				className: "mt-3 max-w-4xl border-l-2 border-primary bg-card/70 py-2.5 pl-3.5 pr-3.5 shadow-[0_0_50px_-25px_var(--gold)] sm:mt-4 sm:border-l-4 sm:py-3.5 sm:pl-5 sm:pr-5 rounded-r",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
-					className: "display text-xs tracking-[0.35em] text-primary sm:text-sm",
-					children: "Problem Statement"
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "mt-1 text-sm font-medium leading-relaxed text-foreground sm:text-base md:text-lg",
-					children: study.problem
-				})]
-			}),
-			study.keyFeatures && study.keyFeatures.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "mt-3 sm:mt-4",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.h3, {
-					initial: { opacity: 0 },
-					animate: { opacity: 1 },
-					transition: {
-						duration: .35,
-						delay: .26
-					},
-					className: "display text-xs tracking-[0.35em] text-primary sm:text-sm",
-					children: "Key Features"
+				className: "mt-5",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-1.5 text-primary",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+						className: "display text-xs tracking-[0.3em] text-primary uppercase",
+						children: "Key Features"
+					})]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "mt-1.5 flex flex-wrap gap-1.5 sm:gap-2",
-					children: study.keyFeatures.map((kf, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.span, {
-						initial: {
-							opacity: 0,
-							scale: .9
-						},
-						animate: {
-							opacity: 1,
-							scale: 1
-						},
-						transition: {
-							duration: .3,
-							delay: .28 + i * .02,
-							ease: EASE$1
-						},
-						className: "rounded border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs text-foreground/90 shadow-[0_0_10px_-4px_var(--gold)]",
+					className: "mt-2 flex flex-wrap gap-2",
+					children: study.keyFeatures.map((kf) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "rounded-full border border-primary/35 bg-primary/10 px-3 py-1 text-xs text-foreground/90 shadow-[0_0_10px_-4px_var(--gold)]",
 						children: kf
 					}, kf))
 				})]
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "mt-3 sm:mt-4",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.h3, {
-					initial: { opacity: 0 },
-					animate: { opacity: 1 },
-					transition: {
-						duration: .35,
-						delay: .3
-					},
-					className: "display text-xs tracking-[0.35em] text-primary sm:text-sm",
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+				initial: {
+					opacity: 0,
+					y: 14
+				},
+				animate: {
+					opacity: 1,
+					y: 0
+				},
+				transition: {
+					duration: .45,
+					delay: .26,
+					ease: EASE$1
+				},
+				className: "mt-6",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+					className: "display text-xs tracking-[0.3em] text-primary uppercase",
 					children: "Constraints"
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
-					className: "mt-1.5 grid gap-2 grid-cols-1 md:grid-cols-2",
-					children: (study.constraints || study.requirements).map((item, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.li, {
-						initial: {
-							opacity: 0,
-							x: -14
-						},
-						animate: {
-							opacity: 1,
-							x: 0
-						},
-						transition: {
-							duration: .35,
-							delay: .32 + i * .03,
-							ease: EASE$1
-						},
-						className: "flex gap-2 text-xs leading-relaxed text-foreground/85 sm:text-sm",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: item })]
+					className: "mt-2.5 grid grid-cols-1 gap-2.5 md:grid-cols-2",
+					children: (study.constraints || study.requirements).map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+						className: "flex items-start gap-2.5 rounded-lg border border-border/40 bg-background/50 p-3 text-xs sm:text-sm leading-relaxed text-foreground/85",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "mt-1 h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_8px_var(--gold)]" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: item })]
 					}, item))
 				})]
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "mt-3 sm:mt-4 mb-2",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "grid gap-3 grid-cols-1 md:grid-cols-2",
-					children: [["Outcome", study.outcome || study.impact], ["Tools & Technologies", study.tools || study.technical]].map(([title, points], i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
-						initial: {
-							opacity: 0,
-							y: 18
-						},
-						animate: {
-							opacity: 1,
-							y: 0
-						},
-						transition: {
-							duration: .4,
-							delay: .38 + i * .05,
-							ease: EASE$1
-						},
-						className: "rounded-md border border-accent/40 bg-card/60 p-3 shadow-[0_0_50px_-25px_var(--neon)] sm:p-4",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
-							className: "display text-xs tracking-[0.25em] text-accent sm:text-sm",
-							children: title
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
-							className: "mt-1.5 space-y-1",
-							children: points.map((p) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
-								className: "flex gap-2 text-xs leading-relaxed text-foreground/85 sm:text-sm",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "mt-1.5 h-1 w-1 shrink-0 rounded-full bg-accent" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: p })]
-							}, p))
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+				initial: {
+					opacity: 0,
+					y: 14
+				},
+				animate: {
+					opacity: 1,
+					y: 0
+				},
+				transition: {
+					duration: .45,
+					delay: .32,
+					ease: EASE$1
+				},
+				className: "mt-6 grid grid-cols-1 gap-4 md:grid-cols-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "rounded-xl border border-primary/40 bg-card/60 p-4 sm:p-5 shadow-[0_0_40px_-25px_var(--gold)]",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-2 text-primary",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Terminal, { className: "h-4 w-4 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+							className: "display text-xs tracking-[0.25em] font-semibold text-primary uppercase",
+							children: "Outcome"
 						})]
-					}, title))
-				})
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+						className: "mt-3 space-y-2",
+						children: (study.outcome || study.impact).map((p) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+							className: "flex items-start gap-2 text-xs sm:text-sm leading-relaxed text-foreground/85",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: p })]
+						}, p))
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "rounded-xl border border-accent/40 bg-card/60 p-4 sm:p-5 shadow-[0_0_40px_-25px_var(--neon)]",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-2 text-accent",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Wrench, { className: "h-4 w-4 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+							className: "display text-xs tracking-[0.25em] font-semibold text-accent uppercase",
+							children: "Tools & Technologies"
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+						className: "mt-3 space-y-2",
+						children: (study.tools || study.technical).map((t) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+							className: "flex items-start gap-2 text-xs sm:text-sm leading-relaxed text-foreground/85",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: t })]
+						}, t))
+					})]
+				})]
 			})
 		]
+	});
+}
+/** Compact card for Grid Catalog view */
+function CaseStudyGridCard({ study, index, onSelect }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		onClick: onSelect,
+		className: "group relative flex flex-col justify-between rounded-xl border border-primary/25 bg-card/80 p-4 sm:p-5 shadow-[0_0_20px_-10px_var(--gold)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/70 hover:shadow-[0_0_35px_-10px_var(--gold)] cursor-pointer",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-wrap items-center justify-between gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "rounded border border-primary/60 bg-primary/20 px-2 py-0.5 font-mono text-[0.7rem] font-bold tracking-widest text-primary",
+					children: study.code
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "rounded border border-accent/40 bg-accent/15 px-2 py-0.5 font-mono text-[0.68rem] tracking-wider text-accent",
+					children: study.language
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-2 text-[0.68rem] font-mono tracking-widest text-muted-foreground uppercase",
+				children: study.category
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+				className: "display mt-1 text-lg font-bold leading-snug text-foreground group-hover:text-primary transition-colors",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+					className: "text-gold-soft/60 mr-1.5",
+					children: [pad(index + 1), "."]
+				}), study.title]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-2.5 line-clamp-3 text-xs leading-relaxed text-foreground/75",
+				children: study.problem
+			}),
+			study.keyFeatures && study.keyFeatures.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-3 flex flex-wrap gap-1",
+				children: [study.keyFeatures.slice(0, 3).map((tag) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "rounded bg-primary/10 px-2 py-0.5 text-[0.65rem] text-primary/90",
+					children: tag
+				}, tag)), study.keyFeatures.length > 3 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+					className: "rounded bg-muted/40 px-1.5 py-0.5 text-[0.65rem] text-muted-foreground",
+					children: ["+", study.keyFeatures.length - 3]
+				})]
+			})
+		] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "mt-4 flex items-center justify-between border-t border-border/40 pt-3",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+				className: "font-mono text-[0.7rem] text-muted-foreground",
+				children: [
+					"#",
+					pad(index + 1),
+					" of 20"
+				]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "text-xs font-semibold text-primary group-hover:translate-x-1 transition-transform flex items-center gap-1",
+				children: "Open Problem →"
+			})]
+		})]
 	});
 }
 function MagneticButton({ children, onClick, disabled, variant = "primary", className = "", ariaLabel }) {
@@ -761,152 +828,110 @@ function PortalTransition({ active }) {
 }
 function CaseStudyDeck({ studies }) {
 	const [index, setIndex] = (0, import_react.useState)(0);
+	const [viewMode, setViewMode] = (0, import_react.useState)("deck");
 	const [transitioning, setTransitioning] = (0, import_react.useState)(false);
-	const [inView, setInView] = (0, import_react.useState)(false);
+	const [searchQuery, setSearchQuery] = (0, import_react.useState)("");
+	const [selectedLanguage, setSelectedLanguage] = (0, import_react.useState)("All");
 	const sectionRef = (0, import_react.useRef)(null);
-	const fitAreaRef = (0, import_react.useRef)(null);
-	const contentRef = (0, import_react.useRef)(null);
-	const indexRef = (0, import_react.useRef)(0);
+	const activeChipRef = (0, import_react.useRef)(null);
+	const chipsContainerRef = (0, import_react.useRef)(null);
 	const busyRef = (0, import_react.useRef)(false);
-	const inViewRef = (0, import_react.useRef)(false);
 	const timersRef = (0, import_react.useRef)([]);
-	indexRef.current = index;
-	inViewRef.current = inView;
-	const track = (0, import_react.useCallback)((id) => {
+	const trackTimer = (0, import_react.useCallback)((id) => {
 		timersRef.current.push(id);
 	}, []);
 	(0, import_react.useEffect)(() => () => {
 		timersRef.current.forEach(window.clearTimeout);
 		timersRef.current = [];
 	}, []);
+	const languageTracks = (0, import_react.useMemo)(() => {
+		const tracks = ["All"];
+		studies.forEach((s) => {
+			if (s.language && !tracks.includes(s.language)) tracks.push(s.language);
+		});
+		return tracks;
+	}, [studies]);
+	const filteredStudies = (0, import_react.useMemo)(() => {
+		const query = searchQuery.trim().toLowerCase();
+		return studies.filter((study) => {
+			if (!(selectedLanguage === "All" || study.language === selectedLanguage)) return false;
+			if (!query) return true;
+			const codeMatch = study.code?.toLowerCase().includes(query);
+			const titleMatch = study.title.toLowerCase().includes(query);
+			const categoryMatch = study.category.toLowerCase().includes(query);
+			const problemMatch = study.problem.toLowerCase().includes(query);
+			const briefMatch = (study.brief || study.context)?.toLowerCase().includes(query);
+			const toolsMatch = (study.tools || []).some((t) => t.toLowerCase().includes(query));
+			const featuresMatch = (study.keyFeatures || []).some((k) => k.toLowerCase().includes(query));
+			return codeMatch || titleMatch || categoryMatch || problemMatch || briefMatch || toolsMatch || featuresMatch;
+		});
+	}, [
+		studies,
+		searchQuery,
+		selectedLanguage
+	]);
+	const currentStudy = filteredStudies[index] || filteredStudies[0] || studies[0];
+	const currentIndex = Math.min(index, Math.max(0, filteredStudies.length - 1));
+	(0, import_react.useEffect)(() => {
+		if (activeChipRef.current && chipsContainerRef.current) activeChipRef.current.scrollIntoView({
+			behavior: "smooth",
+			inline: "center",
+			block: "nearest"
+		});
+	}, [currentIndex, viewMode]);
 	const go = (0, import_react.useCallback)((dir) => {
 		if (busyRef.current) return;
-		const next = indexRef.current + dir;
-		if (next < 0 || next >= studies.length) return;
+		const next = currentIndex + dir;
+		if (next < 0 || next >= filteredStudies.length) return;
 		busyRef.current = true;
 		playSound("portal");
 		setTransitioning(true);
-		track(window.setTimeout(() => setIndex(next), PORTAL_SWAP));
-		track(window.setTimeout(() => {
+		trackTimer(window.setTimeout(() => {
+			setIndex(next);
+		}, PORTAL_SWAP));
+		trackTimer(window.setTimeout(() => {
 			setTransitioning(false);
 			busyRef.current = false;
 			timersRef.current = [];
 		}, PORTAL_TOTAL));
-	}, [studies.length, track]);
+	}, [
+		currentIndex,
+		filteredStudies.length,
+		trackTimer
+	]);
 	const jumpTo = (0, import_react.useCallback)((target) => {
-		if (busyRef.current || target === indexRef.current) return;
-		if (target < 0 || target >= studies.length) return;
+		if (busyRef.current || target === currentIndex) return;
+		if (target < 0 || target >= filteredStudies.length) return;
 		busyRef.current = true;
 		playSound("portal");
 		setTransitioning(true);
-		track(window.setTimeout(() => setIndex(target), PORTAL_SWAP));
-		track(window.setTimeout(() => {
+		trackTimer(window.setTimeout(() => {
+			setIndex(target);
+		}, PORTAL_SWAP));
+		trackTimer(window.setTimeout(() => {
 			setTransitioning(false);
 			busyRef.current = false;
 			timersRef.current = [];
 		}, PORTAL_TOTAL));
-	}, [studies.length, track]);
-	(0, import_react.useEffect)(() => {
-		const area = fitAreaRef.current;
-		if (area) area.scrollTop = 0;
-	}, [index]);
-	(0, import_react.useEffect)(() => {
-		const el = sectionRef.current;
-		if (!el) return;
-		const lenis = () => window.__lenis;
-		let stopTimer = 0;
-		const enter = () => {
-			if (inViewRef.current) return;
-			setInView(true);
-			inViewRef.current = true;
-			const l = lenis();
-			if (l) {
-				l.scrollTo(el, {
-					duration: .8,
-					lock: true
-				});
-				window.clearTimeout(stopTimer);
-				stopTimer = window.setTimeout(() => l.stop(), 850);
-			} else el.scrollIntoView({ behavior: "smooth" });
-		};
-		const release = () => {
-			if (!inViewRef.current || busyRef.current) return;
-			window.clearTimeout(stopTimer);
-			setInView(false);
-			inViewRef.current = false;
-			lenis()?.start();
-		};
-		const onScroll = () => {
-			if (inViewRef.current) return;
-			const r = el.getBoundingClientRect();
-			if (r.top <= window.innerHeight * .45 && r.bottom > window.innerHeight * .5) enter();
-		};
-		let released = 0;
-		const onWheel = (e) => {
-			if (!inViewRef.current) return;
-			const down = e.deltaY > 0;
-			const area = fitAreaRef.current;
-			if (needsScrollRef.current && area) {
-				const atTop = area.scrollTop <= 0;
-				const atBottom = area.scrollTop + area.clientHeight >= area.scrollHeight - 1;
-				if (down && !atBottom || !down && !atTop) {
-					e.preventDefault();
-					e.stopPropagation();
-					area.scrollTop += e.deltaY;
-					return;
-				}
-			}
-			if ((down && indexRef.current === studies.length - 1 || !down && indexRef.current === 0) && Date.now() - released > 600) {
-				released = Date.now();
-				release();
-			} else {
-				e.preventDefault();
-				e.stopPropagation();
-			}
-		};
-		let startY = 0;
-		const onTouchStart = (e) => {
-			startY = e.touches[0]?.clientY ?? 0;
-		};
-		const onTouchMove = (e) => {
-			if (!inViewRef.current) return;
-			const y = e.touches[0]?.clientY ?? 0;
-			const down = startY - y > 0;
-			const area = fitAreaRef.current;
-			if (needsScrollRef.current && area) {
-				const atTop = area.scrollTop <= 0;
-				const atBottom = area.scrollTop + area.clientHeight >= area.scrollHeight - 1;
-				if (down && !atBottom || !down && !atTop) return;
-			}
-			if ((down && indexRef.current === studies.length - 1 || !down && indexRef.current === 0) && Math.abs(startY - y) > 80) release();
-			else e.preventDefault();
-		};
-		window.addEventListener("scroll", onScroll, { passive: true });
-		window.addEventListener("wheel", onWheel, {
-			passive: false,
-			capture: true
+	}, [
+		currentIndex,
+		filteredStudies.length,
+		trackTimer
+	]);
+	const selectFromGrid = (0, import_react.useCallback)((study) => {
+		const idx = filteredStudies.findIndex((s) => s.code === study.code);
+		if (idx !== -1) setIndex(idx);
+		setViewMode("deck");
+		sectionRef.current?.scrollIntoView({
+			behavior: "smooth",
+			block: "start"
 		});
-		window.addEventListener("touchstart", onTouchStart, {
-			passive: true,
-			capture: true
-		});
-		window.addEventListener("touchmove", onTouchMove, {
-			passive: false,
-			capture: true
-		});
-		onScroll();
-		return () => {
-			window.removeEventListener("scroll", onScroll);
-			window.removeEventListener("wheel", onWheel, true);
-			window.removeEventListener("touchstart", onTouchStart, true);
-			window.removeEventListener("touchmove", onTouchMove, true);
-			lenis()?.start();
-		};
-	}, [studies.length]);
+	}, [filteredStudies]);
 	(0, import_react.useEffect)(() => {
+		if (viewMode !== "deck") return;
 		const onKey = (e) => {
-			if (!inViewRef.current || busyRef.current) return;
-			if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+			if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") return;
+			if (e.key === "ArrowRight" || e.key === "PageDown") {
 				e.preventDefault();
 				go(1);
 			} else if (e.key === "ArrowLeft" || e.key === "PageUp") {
@@ -916,136 +941,254 @@ function CaseStudyDeck({ studies }) {
 		};
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
-	}, [go]);
-	const touch = (0, import_react.useRef)({
+	}, [go, viewMode]);
+	const touchStart = (0, import_react.useRef)({
 		x: 0,
 		y: 0
 	});
 	const onTouchStart = (e) => {
-		touch.current = {
+		touchStart.current = {
 			x: e.touches[0]?.clientX ?? 0,
 			y: e.touches[0]?.clientY ?? 0
 		};
 	};
 	const onTouchEnd = (e) => {
-		if (busyRef.current) return;
+		if (viewMode !== "deck" || busyRef.current) return;
 		const t = e.changedTouches[0];
 		if (!t) return;
-		const dx = t.clientX - touch.current.x;
-		const dy = t.clientY - touch.current.y;
-		if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
+		const dx = t.clientX - touchStart.current.x;
+		const dy = t.clientY - touchStart.current.y;
+		if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : -1);
 	};
-	const study = studies[index];
-	if (!study) return null;
-	const isFirst = index === 0;
-	const isLast = index === studies.length - 1;
+	const isFirst = currentIndex === 0;
+	const isLast = currentIndex === filteredStudies.length - 1;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 		ref: sectionRef,
 		id: "case-deck",
-		onTouchStart,
-		onTouchEnd,
-		className: "relative z-10 flex h-screen min-h-[100dvh] w-full flex-col justify-between overflow-hidden px-4 py-4 sm:px-8 sm:py-6 lg:px-16",
+		className: "relative z-10 w-full min-h-screen py-10 px-3 sm:px-6 lg:px-12 bg-background/90",
 		children: [
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PortalTransition, { active: transitioning }),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "pointer-events-none absolute right-4 top-4 z-40 flex items-center gap-2.5 rounded-full border border-primary/40 bg-card/80 px-3.5 py-1.5 backdrop-blur-sm sm:right-8 sm:top-5",
+				className: "mx-auto max-w-6xl",
 				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-						className: "display text-xs tracking-[0.3em] text-primary sm:text-sm",
-						children: ["Case Study ", String(index + 1).padStart(2, "0")]
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-border/40",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_var(--gold)]" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-mono text-xs font-semibold tracking-widest text-primary uppercase",
+									children: "Official Hackathon Round 2"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+								className: "display text-2xl sm:text-4xl font-bold tracking-tight text-foreground mt-1",
+								children: "Problem Statements"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-xs sm:text-sm text-muted-foreground mt-0.5",
+								children: "Explore 20 comprehensive real-world challenges presented by IBM."
+							})
+						] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-1.5 self-start md:self-auto rounded-xl border border-primary/30 bg-card/70 p-1 backdrop-blur-sm",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => setViewMode("deck"),
+								className: `flex items-center gap-2 rounded-lg px-3.5 py-1.5 font-mono text-xs font-semibold transition-all cursor-pointer ${viewMode === "deck" ? "bg-primary text-primary-foreground shadow-[0_0_15px_-3px_var(--gold)]" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`,
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Layers, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Deck View" })]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => setViewMode("grid"),
+								className: `flex items-center gap-2 rounded-lg px-3.5 py-1.5 font-mono text-xs font-semibold transition-all cursor-pointer ${viewMode === "grid" ? "bg-primary text-primary-foreground shadow-[0_0_15px_-3px_var(--gold)]" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`,
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Grid3x3, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Grid View (20)" })]
+							})]
+						})]
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-3.5 w-px bg-border" }),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "display text-xs tracking-[0.3em] text-muted-foreground sm:text-sm",
-						children: String(studies.length).padStart(2, "0")
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 rounded-xl border border-border/40 bg-card/40 p-2.5 backdrop-blur-sm",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "relative flex-1",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "text",
+									value: searchQuery,
+									onChange: (e) => {
+										setSearchQuery(e.target.value);
+										setIndex(0);
+									},
+									placeholder: "Search by code (e.g. J-001), keywords, technology, or title...",
+									className: "w-full rounded-lg border border-border/50 bg-background/80 py-1.5 pl-9 pr-8 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+								}),
+								searchQuery && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+									type: "button",
+									onClick: () => {
+										setSearchQuery("");
+										setIndex(0);
+									},
+									className: "absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-0.5",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "h-3.5 w-3.5" })
+								})
+							]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Funnel, { className: "h-3.5 w-3.5 text-muted-foreground shrink-0 hidden sm:inline" }), languageTracks.map((lang) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								onClick: () => {
+									setSelectedLanguage(lang);
+									setIndex(0);
+								},
+								className: `shrink-0 rounded-md px-2.5 py-1 font-mono text-[0.72rem] transition-all cursor-pointer ${selectedLanguage === lang ? "bg-accent/25 border border-accent/60 text-accent font-semibold" : "border border-border/40 bg-background/50 text-muted-foreground hover:text-foreground"}`,
+								children: lang
+							}, lang))]
+						})]
+					}),
+					viewMode === "deck" && filteredStudies.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-3 flex items-center justify-between gap-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							ref: chipsContainerRef,
+							className: "flex flex-1 items-center gap-1.5 overflow-x-auto py-1 scrollbar-none",
+							children: filteredStudies.map((s, idx) => {
+								const isActive = idx === currentIndex;
+								return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+									ref: isActive ? activeChipRef : null,
+									type: "button",
+									onClick: () => jumpTo(idx),
+									disabled: transitioning,
+									title: `${s.code}: ${s.title}`,
+									className: `shrink-0 rounded-lg px-2.5 py-1 font-mono text-xs transition-all cursor-pointer ${isActive ? "bg-primary font-bold text-primary-foreground shadow-[0_0_12px_var(--gold)] scale-105" : "border border-border/40 bg-card/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"}`,
+									children: s.code || String(idx + 1).padStart(2, "0")
+								}, s.code || idx);
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "font-mono text-xs text-muted-foreground shrink-0 pl-2",
+							children: [
+								currentIndex + 1,
+								" of ",
+								filteredStudies.length
+							]
+						})]
 					})
 				]
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
-				ref: fitAreaRef,
-				animate: transitioning ? {
-					scale: .985,
-					opacity: .25,
-					filter: "blur(6px)",
-					x: [
-						0,
-						-3,
-						3,
-						0
-					]
-				} : {
-					scale: 1,
-					opacity: 1,
-					filter: "blur(0px)"
-				},
-				transition: {
-					duration: transitioning ? .25 : .5,
-					ease: EASE$1
-				},
-				className: "flex min-h-0 w-full flex-1 justify-center items-start overflow-y-auto overflow-x-hidden case-study-scrollbar px-1 sm:px-3 pt-8 sm:pt-4 pb-2",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnimatePresence, {
-					mode: "wait",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						ref: contentRef,
-						className: "w-full",
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CaseStudyPanel, {
-							study,
-							index
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "mx-auto max-w-6xl mt-6",
+				children: filteredStudies.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "rounded-2xl border border-dashed border-border/60 bg-card/40 p-12 text-center",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "mx-auto h-10 w-10 text-muted-foreground/50" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+							className: "display mt-4 text-xl font-bold text-foreground",
+							children: "No matching problem statements found"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "mt-1 text-sm text-muted-foreground",
+							children: [
+								"No challenges match \"",
+								searchQuery,
+								"\" with the selected track filters."
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => {
+								setSearchQuery("");
+								setSelectedLanguage("All");
+							},
+							className: "mt-5 rounded-lg border border-primary/50 bg-primary/20 px-4 py-2 text-xs font-semibold text-primary transition-all hover:bg-primary hover:text-primary-foreground cursor-pointer",
+							children: "Reset All Filters"
 						})
-					}, index)
-				})
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "mx-auto mt-2 flex w-full max-w-5xl shrink-0 flex-col items-center gap-2 sm:mt-3 sm:gap-2.5 z-30",
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "h-px w-full bg-gradient-to-r from-transparent via-primary/70 to-transparent shadow-[var(--glow-gold)]" }),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "flex w-full flex-wrap items-center justify-between gap-2.5",
+					]
+				}) : viewMode === "deck" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					onTouchStart,
+					onTouchEnd,
+					className: "flex flex-col items-center",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnimatePresence, {
+						mode: "wait",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
+							initial: {
+								opacity: 0,
+								y: 16
+							},
+							animate: {
+								opacity: 1,
+								y: 0
+							},
+							exit: {
+								opacity: 0,
+								y: -16
+							},
+							transition: {
+								duration: .35,
+								ease: EASE$1
+							},
+							className: "w-full",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CaseStudyPanel, {
+								study: currentStudy,
+								index: currentIndex,
+								total: filteredStudies.length
+							})
+						}, currentStudy.code || currentIndex)
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "sticky bottom-4 z-30 mt-6 flex w-full max-w-3xl items-center justify-between gap-3 rounded-2xl border border-primary/40 bg-card/90 p-2.5 sm:p-3 shadow-[0_10px_35px_-10px_rgba(0,0,0,0.8),0_0_25px_-5px_var(--gold)] backdrop-blur-md",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(MagneticButton, {
 								variant: "ghost",
 								onClick: () => go(-1),
 								disabled: isFirst || transitioning,
-								ariaLabel: "Previous case study",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, { className: "h-4 w-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									className: "hidden xs:inline",
-									children: "Previous"
-								})]
+								ariaLabel: "Previous problem statement",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, { className: "h-4 w-4" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "hidden sm:inline",
+										children: "Previous Problem"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "sm:hidden",
+										children: "Prev"
+									})
+								]
 							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-								className: "flex max-w-[65vw] sm:max-w-md lg:max-w-xl items-center gap-1 overflow-x-auto py-1 px-1 scrollbar-none",
-								children: studies.map((s, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									type: "button",
-									onClick: () => jumpTo(idx),
-									disabled: transitioning,
-									title: `${s.code}: ${s.title}`,
-									className: `rounded shrink-0 px-2 py-0.5 font-mono text-[0.68rem] transition-all cursor-pointer ${idx === index ? "bg-primary font-bold text-primary-foreground shadow-[0_0_12px_var(--gold)] scale-105" : "border border-border/50 bg-card/60 text-muted-foreground hover:border-primary/50 hover:text-foreground"}`,
-									children: s.code || String(idx + 1).padStart(2, "0")
-								}, s.code || idx))
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex flex-col items-center",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-mono text-xs font-bold text-primary",
+									children: currentStudy.code
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "display text-[0.65rem] tracking-widest text-muted-foreground",
+									children: [
+										currentIndex + 1,
+										" / ",
+										filteredStudies.length
+									]
+								})]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(MagneticButton, {
 								onClick: () => go(1),
 								disabled: isLast || transitioning,
-								ariaLabel: "Next case study",
+								ariaLabel: "Next problem statement",
 								children: [
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "hidden xs:inline",
-										children: isLast ? "All Twenty Revealed" : "Next Case Study"
+										className: "hidden sm:inline",
+										children: isLast ? "Completed" : "Next Problem"
 									}),
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "xs:hidden",
-										children: isLast ? "Done" : "Next"
+										className: "sm:hidden",
+										children: isLast ? "End" : "Next"
 									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "h-4 w-4 sm:h-5 sm:w-5" })
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "h-4 w-4" })
 								]
 							})
 						]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "display text-[0.6rem] tracking-[0.35em] text-muted-foreground sm:text-xs",
-						children: isLast ? "Scroll down to continue" : "Use buttons, swipe, arrow keys or problem tags"
-					})
-				]
+					})]
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6",
+					children: filteredStudies.map((study, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CaseStudyGridCard, {
+						study,
+						index: idx,
+						onSelect: () => selectFromGrid(study)
+					}, study.code || idx))
+				})
 			})
 		]
 	});

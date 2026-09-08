@@ -1,8 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Filter,
+  Grid3X3,
+  Layers,
+  Search,
+  X,
+} from "lucide-react";
 
-import { CaseStudyPanel } from "./CaseStudySection";
+import { CaseStudyGridCard, CaseStudyPanel } from "./CaseStudySection";
 import { MagneticButton } from "./MagneticButton";
 import { PortalTransition } from "./PortalTransition";
 import { EASE, PORTAL_SWAP, PORTAL_TOTAL } from "@/lib/motion";
@@ -10,22 +18,21 @@ import { playSound } from "@/lib/sound";
 import type { CaseStudy } from "@/data/caseStudies";
 
 export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
+  // Navigation & View state
   const [index, setIndex] = useState(0);
+  const [viewMode, setViewMode] = useState<"deck" | "grid">("deck");
   const [transitioning, setTransitioning] = useState(false);
-  const [inView, setInView] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("All");
+
   const sectionRef = useRef<HTMLElement>(null);
-  const fitAreaRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const indexRef = useRef(0);
+  const activeChipRef = useRef<HTMLButtonElement>(null);
+  const chipsContainerRef = useRef<HTMLDivElement>(null);
   const busyRef = useRef(false);
-  const inViewRef = useRef(false);
   const timersRef = useRef<number[]>([]);
 
-  indexRef.current = index;
-  inViewRef.current = inView;
-
-  /* every animation timer is tracked so nothing fires after unmount */
-  const track = useCallback((id: number) => {
+  // Clear timers on unmount
+  const trackTimer = useCallback((id: number) => {
     timersRef.current.push(id);
   }, []);
 
@@ -37,16 +44,86 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     [],
   );
 
+  // Available language tracks
+  const languageTracks = useMemo(() => {
+    const tracks = ["All"];
+    studies.forEach((s) => {
+      if (s.language && !tracks.includes(s.language)) {
+        tracks.push(s.language);
+      }
+    });
+    return tracks;
+  }, [studies]);
+
+  // Filtered studies
+  const filteredStudies = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return studies.filter((study) => {
+      const matchesLang =
+        selectedLanguage === "All" || study.language === selectedLanguage;
+      if (!matchesLang) return false;
+
+      if (!query) return true;
+
+      const codeMatch = study.code?.toLowerCase().includes(query);
+      const titleMatch = study.title.toLowerCase().includes(query);
+      const categoryMatch = study.category.toLowerCase().includes(query);
+      const problemMatch = study.problem.toLowerCase().includes(query);
+      const briefMatch = (study.brief || study.context)
+        ?.toLowerCase()
+        .includes(query);
+      const toolsMatch = (study.tools || []).some((t) =>
+        t.toLowerCase().includes(query),
+      );
+      const featuresMatch = (study.keyFeatures || []).some((k) =>
+        k.toLowerCase().includes(query),
+      );
+
+      return (
+        codeMatch ||
+        titleMatch ||
+        categoryMatch ||
+        problemMatch ||
+        briefMatch ||
+        toolsMatch ||
+        featuresMatch
+      );
+    });
+  }, [studies, searchQuery, selectedLanguage]);
+
+  // Safe active study index within filtered list
+  const currentStudy = filteredStudies[index] || filteredStudies[0] || studies[0];
+  const currentIndex = Math.min(index, Math.max(0, filteredStudies.length - 1));
+
+  // Auto-scroll active chip into view
+  useEffect(() => {
+    if (activeChipRef.current && chipsContainerRef.current) {
+      activeChipRef.current.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, [currentIndex, viewMode]);
+
+  // Navigate to previous/next in filtered list
   const go = useCallback(
     (dir: 1 | -1) => {
       if (busyRef.current) return;
-      const next = indexRef.current + dir;
-      if (next < 0 || next >= studies.length) return;
+      const next = currentIndex + dir;
+      if (next < 0 || next >= filteredStudies.length) return;
+
       busyRef.current = true;
       playSound("portal");
       setTransitioning(true);
-      track(window.setTimeout(() => setIndex(next), PORTAL_SWAP));
-      track(
+
+      trackTimer(
+        window.setTimeout(() => {
+          setIndex(next);
+        }, PORTAL_SWAP),
+      );
+
+      trackTimer(
         window.setTimeout(() => {
           setTransitioning(false);
           busyRef.current = false;
@@ -54,18 +131,26 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
         }, PORTAL_TOTAL),
       );
     },
-    [studies.length, track],
+    [currentIndex, filteredStudies.length, trackTimer],
   );
 
+  // Jump to specific index in filtered list
   const jumpTo = useCallback(
     (target: number) => {
-      if (busyRef.current || target === indexRef.current) return;
-      if (target < 0 || target >= studies.length) return;
+      if (busyRef.current || target === currentIndex) return;
+      if (target < 0 || target >= filteredStudies.length) return;
+
       busyRef.current = true;
       playSound("portal");
       setTransitioning(true);
-      track(window.setTimeout(() => setIndex(target), PORTAL_SWAP));
-      track(
+
+      trackTimer(
+        window.setTimeout(() => {
+          setIndex(target);
+        }, PORTAL_SWAP),
+      );
+
+      trackTimer(
         window.setTimeout(() => {
           setTransitioning(false);
           busyRef.current = false;
@@ -73,130 +158,35 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
         }, PORTAL_TOTAL),
       );
     },
-    [studies.length, track],
+    [currentIndex, filteredStudies.length, trackTimer],
   );
 
-  /* Reset scroll position to top whenever index changes */
+  // Jump to problem from grid card
+  const selectFromGrid = useCallback(
+    (study: CaseStudy) => {
+      const idx = filteredStudies.findIndex((s) => s.code === study.code);
+      if (idx !== -1) {
+        setIndex(idx);
+      }
+      setViewMode("deck");
+      // Smooth scroll to top of section
+      sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    [filteredStudies],
+  );
+
+  // Keyboard navigation when in Deck mode
   useEffect(() => {
-    const area = fitAreaRef.current;
-    if (area) {
-      area.scrollTop = 0;
-    }
-  }, [index]);
-
-
-
-  /* pin the deck: once it enters, lock scrolling until the sequence is done */
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const lenis = () => (window as unknown as { __lenis?: any }).__lenis;
-
-    let stopTimer = 0;
-    const enter = () => {
-      if (inViewRef.current) return;
-      setInView(true);
-      inViewRef.current = true;
-      const l = lenis();
-      if (l) {
-        l.scrollTo(el, { duration: 0.8, lock: true });
-        window.clearTimeout(stopTimer);
-        stopTimer = window.setTimeout(() => l.stop(), 850);
-      } else {
-        el.scrollIntoView({ behavior: "smooth" });
-      }
-    };
-
-    const release = () => {
-      if (!inViewRef.current || busyRef.current) return;
-      window.clearTimeout(stopTimer);
-      setInView(false);
-      inViewRef.current = false;
-      lenis()?.start();
-    };
-
-
-    const onScroll = () => {
-      if (inViewRef.current) return;
-      const r = el.getBoundingClientRect();
-      if (r.top <= window.innerHeight * 0.45 && r.bottom > window.innerHeight * 0.5) enter();
-    };
-
-    let released = 0;
-    const onWheel = (e: WheelEvent) => {
-      if (!inViewRef.current) return;
-      const down = e.deltaY > 0;
-
-      /* when the panel is taller than the screen, the wheel scrolls it first */
-      const area = fitAreaRef.current;
-      if (needsScrollRef.current && area) {
-        const atTop = area.scrollTop <= 0;
-        const atBottom = area.scrollTop + area.clientHeight >= area.scrollHeight - 1;
-        if ((down && !atBottom) || (!down && !atTop)) {
-          e.preventDefault();
-          e.stopPropagation();
-          area.scrollTop += e.deltaY;
-          return;
-        }
-      }
-
-      const canLeave =
-        (down && indexRef.current === studies.length - 1) ||
-        (!down && indexRef.current === 0);
-      if (canLeave && Date.now() - released > 600) {
-        released = Date.now();
-        release();
-      } else {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-
-    let startY = 0;
-    const onTouchStart = (e: TouchEvent) => {
-      startY = e.touches[0]?.clientY ?? 0;
-    };
-    const onTouchMove = (e: TouchEvent) => {
-      if (!inViewRef.current) return;
-      const y = e.touches[0]?.clientY ?? 0;
-      const down = startY - y > 0;
-
-      /* let a tall panel scroll under the finger before leaving the deck */
-      const area = fitAreaRef.current;
-      if (needsScrollRef.current && area) {
-        const atTop = area.scrollTop <= 0;
-        const atBottom = area.scrollTop + area.clientHeight >= area.scrollHeight - 1;
-        if ((down && !atBottom) || (!down && !atTop)) return;
-      }
-
-      const canLeave =
-        (down && indexRef.current === studies.length - 1) ||
-        (!down && indexRef.current === 0);
-      if (canLeave && Math.abs(startY - y) > 80) release();
-      else e.preventDefault();
-    };
-
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("wheel", onWheel, { passive: false, capture: true });
-    window.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
-    onScroll();
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("wheel", onWheel, true);
-      window.removeEventListener("touchstart", onTouchStart, true);
-      window.removeEventListener("touchmove", onTouchMove, true);
-      lenis()?.start();
-    };
-  }, [studies.length]);
-
-  /* presenter remote / keyboard */
-  useEffect(() => {
+    if (viewMode !== "deck") return;
     const onKey = (e: KeyboardEvent) => {
-      if (!inViewRef.current || busyRef.current) return;
-      if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+      // Don't trigger if user is typing in search input
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA"
+      ) {
+        return;
+      }
+      if (e.key === "ArrowRight" || e.key === "PageDown") {
         e.preventDefault();
         go(1);
       } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
@@ -206,119 +196,271 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [go]);
+  }, [go, viewMode]);
 
-  /* swipe */
-  const touch = useRef({ x: 0, y: 0 });
+  // Touch swipe support on deck container (horizontal only)
+  const touchStart = useRef({ x: 0, y: 0 });
   const onTouchStart = (e: React.TouchEvent) => {
-    touch.current = { x: e.touches[0]?.clientX ?? 0, y: e.touches[0]?.clientY ?? 0 };
+    touchStart.current = {
+      x: e.touches[0]?.clientX ?? 0,
+      y: e.touches[0]?.clientY ?? 0,
+    };
   };
   const onTouchEnd = (e: React.TouchEvent) => {
-    if (busyRef.current) return;
+    if (viewMode !== "deck" || busyRef.current) return;
     const t = e.changedTouches[0];
     if (!t) return;
-    const dx = t.clientX - touch.current.x;
-    const dy = t.clientY - touch.current.y;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
+    const dx = t.clientX - touchStart.current.x;
+    const dy = t.clientY - touchStart.current.y;
+    // Only trigger if horizontal swipe is dominant and significant (> 50px)
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      go(dx < 0 ? 1 : -1);
+    }
   };
 
-  const study = studies[index];
-  if (!study) return null;
-  const isFirst = index === 0;
-  const isLast = index === studies.length - 1;
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === filteredStudies.length - 1;
 
   return (
     <section
       ref={sectionRef}
       id="case-deck"
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-      className="relative z-10 flex h-screen min-h-[100dvh] w-full flex-col justify-between overflow-hidden px-4 py-4 sm:px-8 sm:py-6 lg:px-16"
+      className="relative z-10 w-full min-h-screen py-10 px-3 sm:px-6 lg:px-12 bg-background/90"
     >
       <PortalTransition active={transitioning} />
 
-      {/* progress indicator — updates with the swap, not before */}
-      <div className="pointer-events-none absolute right-4 top-4 z-40 flex items-center gap-2.5 rounded-full border border-primary/40 bg-card/80 px-3.5 py-1.5 backdrop-blur-sm sm:right-8 sm:top-5">
-        <span className="display text-xs tracking-[0.3em] text-primary sm:text-sm">
-          Case Study {String(index + 1).padStart(2, "0")}
-        </span>
-        <span className="h-3.5 w-px bg-border" />
-        <span className="display text-xs tracking-[0.3em] text-muted-foreground sm:text-sm">
-          {String(studies.length).padStart(2, "0")}
-        </span>
-      </div>
-
-      <motion.div
-        ref={fitAreaRef}
-        animate={
-          transitioning
-            ? { scale: 0.985, opacity: 0.25, filter: "blur(6px)", x: [0, -3, 3, 0] }
-            : { scale: 1, opacity: 1, filter: "blur(0px)" }
-        }
-        transition={{ duration: transitioning ? 0.25 : 0.5, ease: EASE }}
-        className="flex min-h-0 w-full flex-1 justify-center items-start overflow-y-auto overflow-x-hidden case-study-scrollbar px-1 sm:px-3 pt-8 sm:pt-4 pb-2"
-      >
-        <AnimatePresence mode="wait">
-          <div
-            key={index}
-            ref={contentRef}
-            className="w-full"
-          >
-            <CaseStudyPanel study={study} index={index} />
+      {/* SECTION HEADER & CONTROLS */}
+      <div className="mx-auto max-w-6xl">
+        {/* Top title & View Toggle */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-border/40">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_var(--gold)]" />
+              <span className="font-mono text-xs font-semibold tracking-widest text-primary uppercase">
+                Official Hackathon Round 2
+              </span>
+            </div>
+            <h2 className="display text-2xl sm:text-4xl font-bold tracking-tight text-foreground mt-1">
+              Problem Statements
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              Explore 20 comprehensive real-world challenges presented by IBM.
+            </p>
           </div>
-        </AnimatePresence>
-      </motion.div>
 
+          {/* View Mode Toggle: Deck vs Grid */}
+          <div className="flex items-center gap-1.5 self-start md:self-auto rounded-xl border border-primary/30 bg-card/70 p-1 backdrop-blur-sm">
+            <button
+              type="button"
+              onClick={() => setViewMode("deck")}
+              className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 font-mono text-xs font-semibold transition-all cursor-pointer ${
+                viewMode === "deck"
+                  ? "bg-primary text-primary-foreground shadow-[0_0_15px_-3px_var(--gold)]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+              }`}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span>Deck View</span>
+            </button>
 
-      {/* navigation */}
-      <div className="mx-auto mt-2 flex w-full max-w-5xl shrink-0 flex-col items-center gap-2 sm:mt-3 sm:gap-2.5 z-30">
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/70 to-transparent shadow-[var(--glow-gold)]" />
-        <div className="flex w-full flex-wrap items-center justify-between gap-2.5">
-          <MagneticButton
-            variant="ghost"
-            onClick={() => go(-1)}
-            disabled={isFirst || transitioning}
-            ariaLabel="Previous case study"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden xs:inline">Previous</span>
-          </MagneticButton>
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 font-mono text-xs font-semibold transition-all cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-primary text-primary-foreground shadow-[0_0_15px_-3px_var(--gold)]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+              }`}
+            >
+              <Grid3X3 className="h-3.5 w-3.5" />
+              <span>Grid View (20)</span>
+            </button>
+          </div>
+        </div>
 
-          {/* Quick jump pills - scrollable horizontally on ALL screen sizes */}
-          <div className="flex max-w-[65vw] sm:max-w-md lg:max-w-xl items-center gap-1 overflow-x-auto py-1 px-1 scrollbar-none">
-            {studies.map((s, idx) => (
+        {/* SEARCH & FILTER TOOLBAR */}
+        <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 rounded-xl border border-border/40 bg-card/40 p-2.5 backdrop-blur-sm">
+          {/* Search Box */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIndex(0);
+              }}
+              placeholder="Search by code (e.g. J-001), keywords, technology, or title..."
+              className="w-full rounded-lg border border-border/50 bg-background/80 py-1.5 pl-9 pr-8 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+            />
+            {searchQuery && (
               <button
-                key={s.code || idx}
                 type="button"
-                onClick={() => jumpTo(idx)}
-                disabled={transitioning}
-                title={`${s.code}: ${s.title}`}
-                className={`rounded shrink-0 px-2 py-0.5 font-mono text-[0.68rem] transition-all cursor-pointer ${
-                  idx === index
-                    ? "bg-primary font-bold text-primary-foreground shadow-[0_0_12px_var(--gold)] scale-105"
-                    : "border border-border/50 bg-card/60 text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                onClick={() => {
+                  setSearchQuery("");
+                  setIndex(0);
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Track Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0 hidden sm:inline" />
+            {languageTracks.map((lang) => (
+              <button
+                key={lang}
+                type="button"
+                onClick={() => {
+                  setSelectedLanguage(lang);
+                  setIndex(0);
+                }}
+                className={`shrink-0 rounded-md px-2.5 py-1 font-mono text-[0.72rem] transition-all cursor-pointer ${
+                  selectedLanguage === lang
+                    ? "bg-accent/25 border border-accent/60 text-accent font-semibold"
+                    : "border border-border/40 bg-background/50 text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {s.code || String(idx + 1).padStart(2, "0")}
+                {lang}
               </button>
             ))}
           </div>
-
-          <MagneticButton
-            onClick={() => go(1)}
-            disabled={isLast || transitioning}
-            ariaLabel="Next case study"
-          >
-            <span className="hidden xs:inline">{isLast ? "All Twenty Revealed" : "Next Case Study"}</span>
-            <span className="xs:hidden">{isLast ? "Done" : "Next"}</span>
-            <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
-          </MagneticButton>
         </div>
-        <p className="display text-[0.6rem] tracking-[0.35em] text-muted-foreground sm:text-xs">
-          {isLast
-            ? "Scroll down to continue"
-            : "Use buttons, swipe, arrow keys or problem tags"}
-        </p>
+
+        {/* ACTIVE PROBLEM CHIPS STRIP (Shown in Deck View) */}
+        {viewMode === "deck" && filteredStudies.length > 0 && (
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <div
+              ref={chipsContainerRef}
+              className="flex flex-1 items-center gap-1.5 overflow-x-auto py-1 scrollbar-none"
+            >
+              {filteredStudies.map((s, idx) => {
+                const isActive = idx === currentIndex;
+                return (
+                  <button
+                    key={s.code || idx}
+                    ref={isActive ? activeChipRef : null}
+                    type="button"
+                    onClick={() => jumpTo(idx)}
+                    disabled={transitioning}
+                    title={`${s.code}: ${s.title}`}
+                    className={`shrink-0 rounded-lg px-2.5 py-1 font-mono text-xs transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-primary font-bold text-primary-foreground shadow-[0_0_12px_var(--gold)] scale-105"
+                        : "border border-border/40 bg-card/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                    }`}
+                  >
+                    {s.code || String(idx + 1).padStart(2, "0")}
+                  </button>
+                );
+              })}
+            </div>
+
+            <span className="font-mono text-xs text-muted-foreground shrink-0 pl-2">
+              {currentIndex + 1} of {filteredStudies.length}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* MAIN CONTENT AREA */}
+      <div className="mx-auto max-w-6xl mt-6">
+        {filteredStudies.length === 0 ? (
+          /* Empty search state */
+          <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-12 text-center">
+            <Search className="mx-auto h-10 w-10 text-muted-foreground/50" />
+            <h3 className="display mt-4 text-xl font-bold text-foreground">
+              No matching problem statements found
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              No challenges match "{searchQuery}" with the selected track filters.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedLanguage("All");
+              }}
+              className="mt-5 rounded-lg border border-primary/50 bg-primary/20 px-4 py-2 text-xs font-semibold text-primary transition-all hover:bg-primary hover:text-primary-foreground cursor-pointer"
+            >
+              Reset All Filters
+            </button>
+          </div>
+        ) : viewMode === "deck" ? (
+          /* DECK VIEW: Single problem statement with transitions */
+          <div
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+            className="flex flex-col items-center"
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStudy.code || currentIndex}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35, ease: EASE }}
+                className="w-full"
+              >
+                <CaseStudyPanel
+                  study={currentStudy}
+                  index={currentIndex}
+                  total={filteredStudies.length}
+                />
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Floating / Sticky Deck Navigation Controls */}
+            <div className="sticky bottom-4 z-30 mt-6 flex w-full max-w-3xl items-center justify-between gap-3 rounded-2xl border border-primary/40 bg-card/90 p-2.5 sm:p-3 shadow-[0_10px_35px_-10px_rgba(0,0,0,0.8),0_0_25px_-5px_var(--gold)] backdrop-blur-md">
+              <MagneticButton
+                variant="ghost"
+                onClick={() => go(-1)}
+                disabled={isFirst || transitioning}
+                ariaLabel="Previous problem statement"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Previous Problem</span>
+                <span className="sm:hidden">Prev</span>
+              </MagneticButton>
+
+              <div className="flex flex-col items-center">
+                <span className="font-mono text-xs font-bold text-primary">
+                  {currentStudy.code}
+                </span>
+                <span className="display text-[0.65rem] tracking-widest text-muted-foreground">
+                  {currentIndex + 1} / {filteredStudies.length}
+                </span>
+              </div>
+
+              <MagneticButton
+                onClick={() => go(1)}
+                disabled={isLast || transitioning}
+                ariaLabel="Next problem statement"
+              >
+                <span className="hidden sm:inline">
+                  {isLast ? "Completed" : "Next Problem"}
+                </span>
+                <span className="sm:hidden">{isLast ? "End" : "Next"}</span>
+                <ArrowRight className="h-4 w-4" />
+              </MagneticButton>
+            </div>
+          </div>
+        ) : (
+          /* GRID CATALOG VIEW: All problems displayed in responsive cards */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {filteredStudies.map((study, idx) => (
+              <CaseStudyGridCard
+                key={study.code || idx}
+                study={study}
+                index={idx}
+                onSelect={() => selectFromGrid(study)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
