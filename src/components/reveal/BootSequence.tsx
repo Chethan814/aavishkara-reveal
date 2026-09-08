@@ -61,7 +61,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<0 | 1 | 2>(0);
   const [status, setStatus] = useState("STANDBY");
-  const [lines, setLines] = useState<string[]>([]);
+  const [lines, setLines] = useState<{ id: number; text: string }[]>([]);
   const [glitch, setGlitch] = useState(false);
   const [wipe, setWipe] = useState(false);
   const [ripples, setRipples] = useState<Ripple[]>([]);
@@ -134,7 +134,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
       const pushLine = () => {
         const line = pool[li % pool.length]!;
         li += 1;
-        setLines((prev) => [...prev.slice(-11), line]);
+        setLines((prev) => [...prev.slice(-11), { id: li, text: line }]);
         const elapsed = performance.now() - start;
         const t = Math.min(1, elapsed / TOTAL_ACTIVATION_DURATION);
         if (elapsed < TOTAL_ACTIVATION_DURATION - 400) {
@@ -251,9 +251,9 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
             <p className="display text-sm tracking-[0.35em] text-primary sm:text-lg">{status}</p>
 
             <div className="mt-6 h-40 overflow-hidden font-mono text-[0.68rem] leading-relaxed text-accent/80 sm:h-48 sm:text-xs">
-              {lines.map((l, i) => (
-                <div key={`${l}-${i}`} className="boot-line">
-                  {l}
+              {lines.map((l) => (
+                <div key={l.id} className="boot-line">
+                  {l.text}
                 </div>
               ))}
             </div>
