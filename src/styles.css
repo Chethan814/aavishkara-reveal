@@ -551,6 +551,14 @@
   transition: opacity 0.5s var(--ease-cinematic), transform 0.5s var(--ease-cinematic);
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .boot-grid, .boot-scan, .boot-hand, .boot-hand-ring, .boot-hand-shimmer { animation: none; }
 }

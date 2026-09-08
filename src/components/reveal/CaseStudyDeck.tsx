@@ -10,7 +10,7 @@ import { playSound } from "@/lib/sound";
 import type { CaseStudy } from "@/data/caseStudies";
 
 /* below this the text would be unreadable, so we scroll inside instead */
-const MIN_FIT_SCALE = 0.72;
+const MIN_FIT_SCALE = 0.55;
 
 export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
   const [index, setIndex] = useState(0);
@@ -245,17 +245,17 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
       id="case-deck"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
-      className="relative z-10 flex h-screen w-full flex-col justify-center overflow-hidden px-6 pb-12 pt-24 sm:px-10 sm:py-12 lg:px-20"
+      className="relative z-10 flex h-screen min-h-[100dvh] w-full flex-col justify-between overflow-hidden px-4 py-4 sm:px-8 sm:py-6 lg:px-16"
     >
       <PortalTransition active={transitioning} />
 
       {/* progress indicator — updates with the swap, not before */}
-      <div className="pointer-events-none absolute right-4 top-6 z-40 flex items-center gap-3 rounded-full border border-primary/40 bg-card/80 px-5 py-2 backdrop-blur-sm sm:right-10 sm:top-10">
-        <span className="display text-sm tracking-[0.3em] text-primary sm:text-base">
+      <div className="pointer-events-none absolute right-4 top-4 z-40 flex items-center gap-2.5 rounded-full border border-primary/40 bg-card/80 px-3.5 py-1.5 backdrop-blur-sm sm:right-8 sm:top-5">
+        <span className="display text-xs tracking-[0.3em] text-primary sm:text-sm">
           Case Study {String(index + 1).padStart(2, "0")}
         </span>
-        <span className="h-4 w-px bg-border" />
-        <span className="display text-sm tracking-[0.3em] text-muted-foreground sm:text-base">
+        <span className="h-3.5 w-px bg-border" />
+        <span className="display text-xs tracking-[0.3em] text-muted-foreground sm:text-sm">
           {String(studies.length).padStart(2, "0")}
         </span>
       </div>
@@ -269,7 +269,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
         }
         transition={{ duration: transitioning ? 0.3 : 0.7, ease: EASE }}
         className={`flex min-h-0 w-full flex-1 justify-center ${
-          needsInnerScroll ? "items-start overflow-y-auto" : "items-center overflow-hidden"
+          needsInnerScroll ? "items-start overflow-y-auto no-scrollbar" : "items-center overflow-hidden"
         }`}
       >
         <AnimatePresence mode="wait">
@@ -289,9 +289,9 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
 
 
       {/* navigation */}
-      <div className="mx-auto mt-10 flex w-full max-w-6xl flex-col items-center gap-5">
+      <div className="mx-auto mt-2 flex w-full max-w-5xl shrink-0 flex-col items-center gap-2 sm:mt-3 sm:gap-2.5">
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/70 to-transparent shadow-[var(--glow-gold)]" />
-        <div className="flex w-full flex-wrap items-center justify-between gap-4">
+        <div className="flex w-full flex-wrap items-center justify-between gap-3">
           <MagneticButton
             variant="ghost"
             onClick={() => go(-1)}
