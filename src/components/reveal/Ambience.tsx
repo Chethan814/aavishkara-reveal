@@ -4,12 +4,12 @@ import { useEffect, useMemo } from "react";
 export function Ambience() {
   const particles = useMemo(
     () =>
-      Array.from({ length: 34 }, (_, i) => ({
+      Array.from({ length: 22 }, (_, i) => ({
         id: i,
         left: (i * 37) % 100,
         top: (i * 53) % 100,
         size: 1 + ((i * 7) % 3),
-        delay: (i % 12) * 0.9,
+        delay: (i % 10) * 1.1,
         duration: 9 + ((i * 3) % 9),
         gold: i % 3 === 0,
       })),
@@ -19,23 +19,39 @@ export function Ambience() {
   useEffect(() => {
     if (!window.matchMedia("(pointer: fine)").matches) return;
     const root = document.documentElement;
-    const onMove = (event: PointerEvent) => {
-      root.style.setProperty("--pointer-x", `${(event.clientX / window.innerWidth - 0.5) * 18}px`);
-      root.style.setProperty("--pointer-y", `${(event.clientY / window.innerHeight - 0.5) * 18}px`);
+    let rafId: number | null = null;
+    let pendingEvent: PointerEvent | null = null;
+
+    const updatePointer = () => {
+      if (!pendingEvent) return;
+      root.style.setProperty("--pointer-x", `${(pendingEvent.clientX / window.innerWidth - 0.5) * 18}px`);
+      root.style.setProperty("--pointer-y", `${(pendingEvent.clientY / window.innerHeight - 0.5) * 18}px`);
+      rafId = null;
     };
+
+    const onMove = (event: PointerEvent) => {
+      pendingEvent = event;
+      if (rafId === null) {
+        rafId = requestAnimationFrame(updatePointer);
+      }
+    };
+
     window.addEventListener("pointermove", onMove, { passive: true });
-    return () => window.removeEventListener("pointermove", onMove);
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      window.removeEventListener("pointermove", onMove);
+    };
   }, []);
 
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-      <div className="circuit-grid ambient-grid absolute inset-0" />
-      <div className="ambient-glow absolute left-1/2 top-0 h-[60vh] w-[70vw] -translate-x-1/2 rounded-full bg-accent/8 blur-[140px]" />
-      <div className="ambient-glow-delayed absolute bottom-0 right-0 h-[50vh] w-[50vw] rounded-full bg-primary/6 blur-[160px]" />
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden contain-strict">
+      <div className="circuit-grid ambient-grid absolute inset-0 will-change-transform" />
+      <div className="ambient-glow absolute left-1/2 top-0 h-[60vh] w-[70vw] -translate-x-1/2 rounded-full bg-accent/8 blur-[80px] will-change-transform" />
+      <div className="ambient-glow-delayed absolute bottom-0 right-0 h-[50vh] w-[50vw] rounded-full bg-primary/6 blur-[90px] will-change-transform" />
       {particles.map((p) => (
         <span
           key={p.id}
-          className={`ambient-particle absolute rounded-full ${p.gold ? "bg-primary/50" : "bg-accent/50"}`}
+          className={`ambient-particle absolute rounded-full ${p.gold ? "bg-primary/50" : "bg-accent/50"} will-change-transform`}
           style={{
             left: `${p.left}%`,
             top: `${p.top}%`,

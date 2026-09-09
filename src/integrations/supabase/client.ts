@@ -1,10 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database, SubmissionInsert, SubmissionRow } from "./types";
 
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string) || "";
+const supabaseUrl = (import.meta.env["VITE_SUPABASE_URL"] as string) || "";
 const supabaseAnonKey =
-  (import.meta.env.VITE_SUPABASE_ANON_KEY as string) ||
-  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) ||
+  (import.meta.env["VITE_SUPABASE_ANON_KEY"] as string) ||
+  (import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string) ||
   "";
 
 export const isSupabaseConfigured = Boolean(
@@ -69,8 +69,8 @@ export async function checkExistingSubmission(
   if (isSupabaseConfigured) {
     try {
       // 1. Try exact match
-      const { data, error } = await supabase
-        .from("submissions")
+      const { data, error } = await (supabase
+        .from("submissions") as any)
         .select("*")
         .or(`team_name.eq.${teamName},team_name.ilike.%${cleaned}%`)
         .order("submitted_at", { ascending: false })
@@ -79,19 +79,19 @@ export async function checkExistingSubmission(
 
       if (error) {
         console.warn("Supabase query error, falling back to local cache:", error);
-        return { exists: Boolean(localMatch), submission: localMatch };
+        return { exists: Boolean(localMatch), ...(localMatch ? { submission: localMatch } : {}) };
       }
 
       if (data) {
-        saveLocalSubmission(data);
-        return { exists: true, submission: data };
+        saveLocalSubmission(data as SubmissionRow);
+        return { exists: true, submission: data as SubmissionRow };
       }
     } catch (err) {
       console.warn("Supabase connection issue:", err);
     }
   }
 
-  return { exists: Boolean(localMatch), submission: localMatch };
+  return { exists: Boolean(localMatch), ...(localMatch ? { submission: localMatch } : {}) };
 }
 
 /**
@@ -101,72 +101,53 @@ export async function uploadPresentationFile(
   file: File,
   teamName: string
 ): Promise<{ url: string; error?: string }> {
-  // Validate file size (50MB max)
-  const MAX_SIZE_MB = 50;
-  if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-    return {
-      url: "",
-      error: `File size (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds maximum limit of 50MB.`,
-    };
+  if (!file) return { url: "", error: "No file provided" };
+
+  const sanitizeName = (str: string) => str.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase();
+  const ext = file.name.split(".").pop() || "pdf";
+  const fileName = `${sanitizeName(teamName)}_${Date.now()}.${ext}`;
+  const filePath = `presentations/${fileName}`;
+
+  if (!isSupabaseConfigured) {
+    // Demo fallback URL
+    const demoUrl = URL.createObjectURL(file);
+    return { url: demoUrl };
   }
 
-  // Validate extension (.ppt, .pptx, .pdf)
-  const allowedExtensions = ["ppt", "pptx", "pdf"];
-  const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
-  if (!allowedExtensions.includes(fileExt)) {
-    return {
-      url: "",
-      error: "Only .ppt, .pptx, and .pdf files are accepted.",
-    };
-  }
+  try {
+    const { error } = await supabase.storage
+      .from("team-submissions")
+      .upload(filePath, file, { upsert: true, contentType: file.type });
 
-  const cleanTeam = teamName.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase();
-  const timestamp = Date.now();
-  const fileName = `${cleanTeam}_${timestamp}.${fileExt}`;
-  const filePath = `uploads/${fileName}`;
-
-  if (isSupabaseConfigured) {
-    try {
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("team-submissions")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: true,
-        });
-
-      if (uploadError) {
-        console.error("Storage upload error:", uploadError);
-        return {
-          url: "",
-          error: `Storage upload failed: ${uploadError.message}`,
-        };
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("team-submissions")
-        .getPublicUrl(uploadData?.path || filePath);
-
-      return { url: publicUrlData.publicUrl };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Upload error";
-      return { url: "", error: msg };
+    if (error) {
+      console.error("Storage upload error:", error);
+      return { url: "", error: error.message };
     }
-  }
 
-  // Development fallback when Supabase keys not set
-  console.info("Demo Mode: Simulating file upload to team-submissions bucket");
-  const simulatedUrl = `https://demo-storage.aavishkara26.org/team-submissions/${fileName}`;
-  return { url: simulatedUrl };
+    const { data: publicUrlData } = supabase.storage
+      .from("team-submissions")
+      .getPublicUrl(filePath);
+
+    return { url: publicUrlData.publicUrl };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Upload error";
+    return { url: "", error: msg };
+  }
 }
 
 /**
- * Insert record into `submissions` table
+ * Submit or update project submission
  */
-export async function submitProject(
-  payload: SubmissionInsert
-): Promise<{ success: boolean; data?: SubmissionRow; error?: string }> {
+export async function submitProject(payload: {
+  team_name: string;
+  case_study_code: string;
+  case_study_title: string;
+  github_link: string;
+  ppt_file_url: string;
+  submitted_at?: string;
+}): Promise<{ success: boolean; data?: SubmissionRow; error?: string }> {
   const newRow: SubmissionRow = {
-    id: payload.id || crypto.randomUUID(),
+    id: `sub_${Date.now()}`,
     team_name: payload.team_name,
     case_study_code: payload.case_study_code,
     case_study_title: payload.case_study_title,
@@ -177,8 +158,8 @@ export async function submitProject(
 
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await supabase
-        .from("submissions")
+      const { data, error } = await (supabase
+        .from("submissions") as any)
         .insert({
           team_name: payload.team_name,
           case_study_code: payload.case_study_code,
@@ -194,8 +175,8 @@ export async function submitProject(
         return { success: false, error: error.message };
       }
 
-      saveLocalSubmission(data);
-      return { success: true, data };
+      saveLocalSubmission(data as SubmissionRow);
+      return { success: true, data: data as SubmissionRow };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Database error";
       return { success: false, error: msg };

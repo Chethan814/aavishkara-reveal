@@ -117,26 +117,26 @@ function Reveal() {
 
   // When booting finishes, ensure the user starts at the Hero section at the top
   useEffect(() => {
-    if (!booting) {
-      const resetScrollToTop = () => {
-        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-        const lenis = (window as unknown as { __lenis?: { scrollTo: (target: number, options?: object) => void } }).__lenis;
-        if (lenis) {
-          lenis.scrollTo(0, { immediate: true });
-        }
-      };
+    if (booting) return;
 
-      resetScrollToTop();
-      const r1 = requestAnimationFrame(resetScrollToTop);
-      const t1 = setTimeout(resetScrollToTop, 50);
-      const t2 = setTimeout(resetScrollToTop, 200);
+    const resetScrollToTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      const lenis = (window as unknown as { __lenis?: { scrollTo: (target: number, options?: object) => void } }).__lenis;
+      if (lenis) {
+        lenis.scrollTo(0, { immediate: true });
+      }
+    };
 
-      return () => {
-        cancelAnimationFrame(r1);
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
-    }
+    resetScrollToTop();
+    const r1 = requestAnimationFrame(resetScrollToTop);
+    const t1 = setTimeout(resetScrollToTop, 50);
+    const t2 = setTimeout(resetScrollToTop, 200);
+
+    return () => {
+      cancelAnimationFrame(r1);
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [booting]);
 
   if (booting) return <BootSequence onDone={handleBootDone} />;

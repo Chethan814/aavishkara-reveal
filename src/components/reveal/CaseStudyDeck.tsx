@@ -389,7 +389,7 @@ export function CaseStudyDeck({ studies }: { studies: CaseStudy[] }) {
               Reset All Filters
             </button>
           </div>
-        ) : viewMode === "deck" ? (
+        ) : viewMode === "deck" && currentStudy ? (
           /* DECK VIEW: Single problem statement with transitions */
           <div
             onTouchStart={onTouchStart}

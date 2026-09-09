@@ -107,71 +107,71 @@ export function TeamAssignmentsSection() {
   const isAnythingActive = Boolean(activeCaseStudyCode || activeTeamNames.length > 0);
 
   // Recalculate SVG connector line coordinates between columns on desktop
-  const recalculateLines = () => {
-    if (!containerRef.current || window.innerWidth < 1024) {
-      setLines([]);
-      return;
-    }
-
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const newLines: ConnectorLine[] = [];
-
-    ALL_TEAMS.forEach((team) => {
-      const teamEl = containerRef.current?.querySelector(
-        `[data-team-id="${encodeURIComponent(team.teamName)}"]`
-      ) as HTMLElement | null;
-
-      const csEl = containerRef.current?.querySelector(
-        `[data-cs-id="${team.caseStudyCode}"]`
-      ) as HTMLElement | null;
-
-      if (teamEl && csEl) {
-        const teamRect = teamEl.getBoundingClientRect();
-        const csRect = csEl.getBoundingClientRect();
-
-        // Left edge of team card (Right column)
-        const startX = teamRect.left - containerRect.left;
-        const startY = teamRect.top + teamRect.height / 2 - containerRect.top;
-
-        // Right edge of case study card (Left column)
-        const endX = csRect.right - containerRect.left;
-        const endY = csRect.top + csRect.height / 2 - containerRect.top;
-
-        // Curved Bezier curve from Team (startX, startY) to Case Study (endX, endY)
-        const dx = startX - endX;
-        const cpx1 = startX - dx * 0.45;
-        const cpx2 = endX + dx * 0.45;
-        const pathD = `M ${startX} ${startY} C ${cpx1} ${startY}, ${cpx2} ${endY}, ${endX} ${endY}`;
-
-        newLines.push({
-          id: `${team.teamName}->${team.caseStudyCode}`,
-          teamName: team.teamName,
-          caseStudyCode: team.caseStudyCode,
-          start: { x: startX, y: startY },
-          end: { x: endX, y: endY },
-          pathD,
-        });
-      }
-    });
-
-    setLines(newLines);
-  };
-
   useEffect(() => {
     if (!isMounted) return;
 
-    recalculateLines();
-    const timer = setTimeout(recalculateLines, 150);
-    const timer2 = setTimeout(recalculateLines, 500);
+    let rafId: number | null = null;
 
-    const handleResize = () => {
-      recalculateLines();
+    const recalculateLines = () => {
+      if (!containerRef.current || window.innerWidth < 1024) {
+        setLines([]);
+        return;
+      }
+
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const newLines: ConnectorLine[] = [];
+
+      ALL_TEAMS.forEach((team) => {
+        const teamEl = containerRef.current?.querySelector(
+          `[data-team-id="${encodeURIComponent(team.teamName)}"]`
+        ) as HTMLElement | null;
+
+        const csEl = containerRef.current?.querySelector(
+          `[data-cs-id="${team.caseStudyCode}"]`
+        ) as HTMLElement | null;
+
+        if (teamEl && csEl) {
+          const teamRect = teamEl.getBoundingClientRect();
+          const csRect = csEl.getBoundingClientRect();
+
+          const startX = teamRect.left - containerRect.left;
+          const startY = teamRect.top + teamRect.height / 2 - containerRect.top;
+
+          const endX = csRect.right - containerRect.left;
+          const endY = csRect.top + csRect.height / 2 - containerRect.top;
+
+          const dx = startX - endX;
+          const cpx1 = startX - dx * 0.45;
+          const cpx2 = endX + dx * 0.45;
+          const pathD = `M ${startX} ${startY} C ${cpx1} ${startY}, ${cpx2} ${endY}, ${endX} ${endY}`;
+
+          newLines.push({
+            id: `${team.teamName}->${team.caseStudyCode}`,
+            teamName: team.teamName,
+            caseStudyCode: team.caseStudyCode,
+            start: { x: startX, y: startY },
+            end: { x: endX, y: endY },
+            pathD,
+          });
+        }
+      });
+
+      setLines(newLines);
     };
 
-    window.addEventListener("resize", handleResize);
+    const scheduleRecalculation = () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(recalculateLines);
+    };
+
+    scheduleRecalculation();
+    const timer = setTimeout(scheduleRecalculation, 150);
+    const timer2 = setTimeout(scheduleRecalculation, 500);
+
+    window.addEventListener("resize", scheduleRecalculation, { passive: true });
 
     const resizeObserver = new ResizeObserver(() => {
-      recalculateLines();
+      scheduleRecalculation();
     });
 
     if (containerRef.current) {
@@ -179,9 +179,10 @@ export function TeamAssignmentsSection() {
     }
 
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
       clearTimeout(timer);
       clearTimeout(timer2);
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", scheduleRecalculation);
       resizeObserver.disconnect();
     };
   }, [isMounted, filteredCaseStudies.length, filteredTeams.length]);

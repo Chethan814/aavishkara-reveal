@@ -11,20 +11,52 @@ export function CustomCursor() {
   const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const rippleId = useRef(0);
 
+  const isInteractiveRef = useRef(false);
+  const isVisibleRef = useRef(false);
+
   useEffect(() => {
     if (!window.matchMedia("(pointer: fine)").matches) return;
 
-    const onMove = (event: PointerEvent) => {
+    let rafId: number | null = null;
+    let pendingEvent: PointerEvent | null = null;
+
+    const processMove = () => {
+      if (!pendingEvent) return;
+      const event = pendingEvent;
+      pendingEvent = null;
+      rafId = null;
+
       x.set(event.clientX);
       y.set(event.clientY);
-      setVisible(true);
+
+      if (!isVisibleRef.current) {
+        isVisibleRef.current = true;
+        setVisible(true);
+      }
+
       const target = event.target;
-      setInteractive(
+      const nextInteractive =
         target instanceof Element &&
-          Boolean(target.closest("button, a, [role='button'], input, select, textarea")),
-      );
+        Boolean(target.closest("button, a, [role='button'], input, select, textarea"));
+
+      if (nextInteractive !== isInteractiveRef.current) {
+        isInteractiveRef.current = nextInteractive;
+        setInteractive(nextInteractive);
+      }
     };
-    const onLeave = () => setVisible(false);
+
+    const onMove = (event: PointerEvent) => {
+      pendingEvent = event;
+      if (rafId === null) {
+        rafId = requestAnimationFrame(processMove);
+      }
+    };
+
+    const onLeave = () => {
+      isVisibleRef.current = false;
+      setVisible(false);
+    };
+
     const onDown = (event: PointerEvent) => {
       const id = ++rippleId.current;
       setRipples((current) => [...current, { id, x: event.clientX, y: event.clientY }]);
@@ -33,10 +65,11 @@ export function CustomCursor() {
       }, 650);
     };
 
-    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointermove", onMove, { passive: true });
     document.documentElement.addEventListener("mouseleave", onLeave);
-    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointerdown", onDown, { passive: true });
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
       window.removeEventListener("pointermove", onMove);
       document.documentElement.removeEventListener("mouseleave", onLeave);
       window.removeEventListener("pointerdown", onDown);
