@@ -10,13 +10,15 @@ export function MagneticButton({
   variant = "primary",
   className = "",
   ariaLabel,
+  type = "button",
 }: {
   children: React.ReactNode;
-  onClick: () => void;
+  onClick?: () => void;
   disabled?: boolean;
   variant?: "primary" | "ghost";
   className?: string;
   ariaLabel?: string;
+  type?: "button" | "submit";
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -39,12 +41,12 @@ export function MagneticButton({
   return (
     <motion.button
       ref={ref}
-      type="button"
+      type={type}
       aria-label={ariaLabel}
       onClick={() => {
         if (disabled) return;
         playSound("click");
-        onClick();
+        onClick?.();
       }}
       disabled={disabled}
       onMouseEnter={() => {

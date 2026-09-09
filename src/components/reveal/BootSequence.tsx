@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Volume2, VolumeX, SkipForward } from "lucide-react";
+import { Volume2, VolumeX, SkipForward, Play, ShieldCheck } from "lucide-react";
 
 import {
   BOOT_SESSION_KEY,
@@ -77,6 +77,7 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
   const [charge, setCharge] = useState(0); // 0–1 hold charge
   const [activeTouches, setActiveTouches] = useState<TouchPoint[]>([]);
   const [lockedFingers, setLockedFingers] = useState<boolean[]>([false, false, false, false, false]);
+  const [deviceMode, setDeviceMode] = useState<"desktop" | "mobile" | "multitouch">("desktop");
 
   const rippleId = useRef(0);
   const activeRef = useRef(false);
@@ -105,6 +106,29 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
       setVisible(false);
       doneRef.current(false);
     }
+  }, []);
+
+  /* detect client device capabilities (mobile phones, non-touch laptops, multi-touch kiosks) */
+  useEffect(() => {
+    const detectMode = () => {
+      if (typeof window === "undefined") return;
+      const isMobile =
+        window.innerWidth < 768 ||
+        /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMobile) {
+        setDeviceMode("mobile");
+        return;
+      }
+      const maxTouch = navigator.maxTouchPoints || 0;
+      if (maxTouch >= 5) {
+        setDeviceMode("multitouch");
+      } else {
+        setDeviceMode("desktop");
+      }
+    };
+    detectMode();
+    window.addEventListener("resize", detectMode);
+    return () => window.removeEventListener("resize", detectMode);
   }, []);
 
   /* warm downstream assets on mount */
@@ -209,6 +233,28 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
     [addRipple],
   );
 
+  const handleTrigger = useCallback(() => {
+    if (activeRef.current) return;
+    primeVideo();
+    const cx = typeof window !== "undefined" ? window.innerWidth / 2 : 200;
+    const cy = typeof window !== "undefined" ? window.innerHeight / 2 : 200;
+    addRipple(cx, cy, true);
+    activate([{ x: cx, y: cy }]);
+  }, [activate, addRipple, primeVideo]);
+
+  /* Keyboard shortcut for desktop users (Space or Enter to launch instantly) */
+  useEffect(() => {
+    if (!visible || active) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" || e.code === "Enter") {
+        e.preventDefault();
+        handleTrigger();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [visible, active, handleTrigger]);
+
   /* Compute which fingers to lock based on touches and charge */
   const updateFingerStates = useCallback((touchesCount: number, currentCharge: number) => {
     // If charge is progressing (from holding single finger or mouse), lock fingers sequentially
@@ -224,7 +270,7 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
     ]);
   }, []);
 
-  /* Input Handling: Multi-Touch & Multi-Finger Scanner */
+  /* Input Handling: Adaptive for Mobile, Desktop & Multi-Touch */
   useEffect(() => {
     if (!visible) return;
 
@@ -256,13 +302,24 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
 
     const onTouchStart = (e: TouchEvent) => {
       if (activeRef.current) return;
+      primeVideo();
+
+      if (deviceMode === "mobile") {
+        const t = e.touches[0];
+        const pt = t
+          ? { id: t.identifier, x: t.clientX, y: t.clientY }
+          : { id: 0, x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        addRipple(pt.x, pt.y, true);
+        activate([pt]);
+        return;
+      }
+
       const touches = Array.from(e.touches).map((t) => ({
         id: t.identifier,
         x: t.clientX,
         y: t.clientY,
       }));
       setActiveTouches(touches);
-      primeVideo();
 
       touches.forEach((t) => addRipple(t.x, t.y, false));
 
@@ -289,7 +346,7 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (activeRef.current) return;
+      if (activeRef.current || deviceMode === "mobile") return;
       const touches = Array.from(e.touches).map((t) => ({
         id: t.identifier,
         x: t.clientX,
@@ -307,6 +364,7 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
     };
 
     const onTouchEnd = (e: TouchEvent) => {
+      if (deviceMode === "mobile") return;
       const remainingTouches = Array.from(e.touches).map((t) => ({
         id: t.identifier,
         x: t.clientX,
@@ -325,21 +383,29 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
     /* Mouse fallback for desktop users */
     const onMouseDown = (e: MouseEvent) => {
       if (activeRef.current) return;
+      primeVideo();
+
+      if (deviceMode === "desktop") {
+        // Desktop / non-touch laptop: single click launches immediately!
+        addRipple(e.clientX, e.clientY, true);
+        activate([{ x: e.clientX, y: e.clientY }]);
+        return;
+      }
+
       const pt = { id: 999, x: e.clientX, y: e.clientY };
       setActiveTouches([pt]);
-      primeVideo();
       addRipple(e.clientX, e.clientY, false);
       cancelCharge();
       startCharge([pt], HOLD_FALLBACK_DURATION);
     };
 
     const onMouseMove = (e: MouseEvent) => {
-      if (activeRef.current || holdTimer.current === null) return;
+      if (activeRef.current || holdTimer.current === null || deviceMode === "desktop") return;
       setActiveTouches([{ id: 999, x: e.clientX, y: e.clientY }]);
     };
 
     const onMouseUp = () => {
-      if (activeRef.current) return;
+      if (activeRef.current || deviceMode === "desktop") return;
       setActiveTouches([]);
       cancelCharge();
       setLockedFingers([false, false, false, false, false]);
@@ -365,7 +431,7 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
       window.removeEventListener("mouseleave", onMouseUp);
       cancelCharge();
     };
-  }, [visible, activate, addRipple, charge, updateFingerStates]);
+  }, [visible, activate, addRipple, charge, updateFingerStates, deviceMode, primeVideo]);
 
   useEffect(
     () => () => {
@@ -398,41 +464,42 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
       <div className={`boot-grid absolute inset-0 ${active ? "boot-grid-hot" : ""}`} />
       <div className={`boot-scan absolute inset-0 ${active ? "boot-scan-hot" : ""}`} />
 
-      {/* FLOATING OUTLINE RETICLES AROUND EACH PHYSICAL FINGER TOUCH */}
-      {activeTouches.map((touch, i) => (
-        <div
-          key={touch.id}
-          className="pointer-events-none fixed z-[100] -translate-x-1/2 -translate-y-1/2 transition-transform duration-75"
-          style={{ left: touch.x, top: touch.y }}
-        >
-          <div className="relative flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28">
-            {/* Outer rotating bracket ring around the finger */}
-            <div className="finger-reticle-spin absolute inset-0 rounded-full border border-dashed border-primary/80" />
-            <div className="finger-reticle-spin-fast absolute inset-2 rounded-full border border-dotted border-accent/60" />
+      {/* FLOATING OUTLINE RETICLES AROUND EACH PHYSICAL FINGER TOUCH (ONLY IN MULTITOUCH MODE) */}
+      {deviceMode === "multitouch" &&
+        activeTouches.map((touch, i) => (
+          <div
+            key={touch.id}
+            className="pointer-events-none fixed z-[100] -translate-x-1/2 -translate-y-1/2 transition-transform duration-75"
+            style={{ left: touch.x, top: touch.y }}
+          >
+            <div className="relative flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28">
+              {/* Outer rotating bracket ring around the finger */}
+              <div className="finger-reticle-spin absolute inset-0 rounded-full border border-dashed border-primary/80" />
+              <div className="finger-reticle-spin-fast absolute inset-2 rounded-full border border-dotted border-accent/60" />
 
-            {/* Pulse ping ring expanding from finger contact point */}
-            <div className="finger-pulse-ring absolute inset-3 rounded-full border-2 border-primary" />
+              {/* Pulse ping ring expanding from finger contact point */}
+              <div className="finger-pulse-ring absolute inset-3 rounded-full border-2 border-primary" />
 
-            {/* Center contact lock */}
-            <div className="h-4 w-4 rounded-full border border-accent bg-accent/30 shadow-[0_0_20px_var(--neon)]" />
-            <div className="h-1.5 w-1.5 rounded-full bg-primary shadow-[var(--glow-gold)]" />
+              {/* Center contact lock */}
+              <div className="h-4 w-4 rounded-full border border-accent bg-accent/30 shadow-[0_0_20px_var(--neon)]" />
+              <div className="h-1.5 w-1.5 rounded-full bg-primary shadow-[var(--glow-gold)]" />
 
-            {/* Holographic corner outline brackets */}
-            <div className="absolute -left-1 -top-1 h-3.5 w-3.5 border-l-2 border-t-2 border-primary shadow-[var(--glow-gold)]" />
-            <div className="absolute -right-1 -top-1 h-3.5 w-3.5 border-r-2 border-t-2 border-primary shadow-[var(--glow-gold)]" />
-            <div className="absolute -bottom-1 -left-1 h-3.5 w-3.5 border-b-2 border-l-2 border-primary shadow-[var(--glow-gold)]" />
-            <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 border-b-2 border-r-2 border-primary shadow-[var(--glow-gold)]" />
+              {/* Holographic corner outline brackets */}
+              <div className="absolute -left-1 -top-1 h-3.5 w-3.5 border-l-2 border-t-2 border-primary shadow-[var(--glow-gold)]" />
+              <div className="absolute -right-1 -top-1 h-3.5 w-3.5 border-r-2 border-t-2 border-primary shadow-[var(--glow-gold)]" />
+              <div className="absolute -bottom-1 -left-1 h-3.5 w-3.5 border-b-2 border-l-2 border-primary shadow-[var(--glow-gold)]" />
+              <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 border-b-2 border-r-2 border-primary shadow-[var(--glow-gold)]" />
 
-            {/* High-tech node identification badge */}
-            <div className="display absolute -bottom-7 whitespace-nowrap rounded border border-primary/60 bg-card/95 px-2.5 py-0.5 text-[0.65rem] font-semibold tracking-[0.25em] text-primary shadow-[0_0_15px_rgba(245,184,0,0.35)] backdrop-blur-md">
-              FINGER 0{i + 1} :: LOCKED
+              {/* High-tech node identification badge */}
+              <div className="display absolute -bottom-7 whitespace-nowrap rounded border border-primary/60 bg-card/95 px-2.5 py-0.5 text-[0.65rem] font-semibold tracking-[0.25em] text-primary shadow-[0_0_15px_rgba(245,184,0,0.35)] backdrop-blur-md">
+                FINGER 0{i + 1} :: LOCKED
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
 
-      {/* LASER ENERGY CONNECTION LINES BETWEEN MULTIPLE TOUCHES */}
-      {activeTouches.length >= 2 && (
+      {/* LASER ENERGY CONNECTION LINES BETWEEN MULTIPLE TOUCHES (ONLY IN MULTITOUCH MODE) */}
+      {deviceMode === "multitouch" && activeTouches.length >= 2 && (
         <svg className="pointer-events-none fixed inset-0 z-[95] h-full w-full">
           {activeTouches.slice(0, -1).map((p1, idx) => {
             const p2 = activeTouches[idx + 1]!;
@@ -475,253 +542,408 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
         }}
       >
         {!active ? (
-          <div className="boot-idle-content flex flex-col items-center gap-5 py-4 text-center sm:gap-6 sm:py-6">
-            {/* HUD HEADER */}
-            <div className="flex items-center gap-3">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
-              <p className="display text-xs tracking-[0.4em] text-primary sm:text-sm">
-                BIOMETRIC TOUCH MATRIX // 5-FINGER RECOGNITION
-              </p>
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
-            </div>
+          deviceMode === "desktop" ? (
+            /* 1. DESKTOP WORKSTATION / NON-TOUCH SCREEN LAPTOP INTERFACE */
+            <div className="boot-idle-content flex flex-col items-center gap-5 py-4 text-center sm:gap-6 sm:py-6 max-w-xl mx-auto">
+              {/* HUD HEADER */}
+              <div className="flex items-center gap-3">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+                <p className="display text-xs tracking-[0.4em] text-primary sm:text-sm font-semibold">
+                  SYSTEM TERMINAL // PRESENTATION ACCESS
+                </p>
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+              </div>
 
-            {/* 5-FINGER BIOMETRIC SCANNER GRAPHIC */}
-            <div className="relative flex items-center justify-center p-2">
-              {/* Outer pulsing scanning rings */}
-              <div className="absolute h-64 w-64 rounded-full border border-primary/25 boot-hand-ring" />
-              <div className="absolute h-64 w-64 rounded-full border border-accent/20 boot-hand-ring" style={{ animationDelay: "0.8s" }} />
-
-              {/* Charge SVG indicator */}
-              {charge > 0 && (
-                <svg className="absolute h-72 w-72 pointer-events-none" viewBox="0 0 100 100">
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="47"
-                    fill="none"
-                    stroke="oklch(0.82 0.16 85 / 80%)"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeDasharray={`${charge * 295} 295`}
-                    transform="rotate(-90 50 50)"
-                    style={{ filter: "drop-shadow(0 0 8px oklch(0.82 0.16 85 / 75%))" }}
-                  />
-                </svg>
-              )}
-
-              {/* FUTURISTIC BIOMETRIC HAND SVG WITH 5 INDEPENDENT FINGERS */}
-              <svg
-                viewBox="0 0 240 280"
-                className="h-56 w-56 sm:h-64 sm:w-64 select-none drop-shadow-[0_0_20px_rgba(245,184,0,0.15)]"
-              >
-                <defs>
-                  {/* Cybernetic grid fill */}
-                  <pattern id="bio-grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                    <path d="M 10 0 L 0 0 0 10" fill="none" stroke="oklch(0.82 0.16 85 / 15%)" strokeWidth="0.5" />
-                  </pattern>
-                  {/* Palm core gradient */}
-                  <radialGradient id="core-glow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="oklch(0.82 0.16 85 / 50%)" />
-                    <stop offset="70%" stopColor="oklch(0.82 0.16 85 / 10%)" />
-                    <stop offset="100%" stopColor="transparent" />
-                  </radialGradient>
-                </defs>
-
-                {/* PALM SKELETON BASE */}
-                <path
-                  d="M 66 175 C 56 215 72 250 120 255 C 168 250 184 215 174 175 L 166 160 L 140 152 L 120 152 L 100 152 L 74 160 Z"
-                  className={`bio-finger-path ${
-                    activeCount >= 3 ? "bio-finger-active" : "bio-finger-inactive"
-                  }`}
-                  strokeWidth="2"
+              {/* CYBERNETIC CORE REACTOR GRAPHIC (REPLACES 5-FINGER HAND) */}
+              <div className="relative flex items-center justify-center p-3 sm:p-5">
+                {/* Outer pulsing scanning rings */}
+                <div className="absolute h-48 w-48 rounded-full border border-primary/25 boot-hand-ring sm:h-56 sm:w-56" />
+                <div
+                  className="absolute h-56 w-56 rounded-full border border-accent/20 boot-hand-ring sm:h-64 sm:w-64"
+                  style={{ animationDelay: "0.8s" }}
+                />
+                <div
+                  className="absolute h-64 w-64 rounded-full border border-dashed border-primary/20 animate-spin sm:h-72 sm:w-72"
+                  style={{ animationDuration: "24s" }}
                 />
 
-                {/* 1. THUMB (LEFT) */}
-                <g id="finger-thumb">
-                  <path
-                    d="M 76 182 L 48 162 C 34 148 24 134 32 118 C 40 104 56 108 68 124 L 84 152 Z"
-                    className={`bio-finger-path ${
-                      lockedFingers[0] ? "bio-finger-active" : "bio-finger-inactive"
-                    }`}
-                    strokeWidth="2"
-                  />
-                  {/* Joint notches */}
-                  <line x1="44" y1="138" x2="58" y2="148" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-                  {/* Fingertip target */}
-                  <circle
-                    cx="44"
-                    cy="120"
-                    r={lockedFingers[0] ? "6" : "4"}
-                    className={`bio-finger-path ${lockedFingers[0] ? "fill-primary" : "fill-none stroke-primary/50"}`}
-                    strokeWidth="1.5"
-                  />
-                  {lockedFingers[0] && (
-                    <circle cx="44" cy="120" r="10" fill="none" stroke="oklch(0.82 0.16 85)" strokeWidth="1" strokeDasharray="3 2" className="animate-spin" />
-                  )}
-                </g>
-
-                {/* 2. INDEX FINGER */}
-                <g id="finger-index">
-                  <path
-                    d="M 68 152 L 68 76 C 68 56 90 56 90 76 L 90 152 Z"
-                    className={`bio-finger-path ${
-                      lockedFingers[1] ? "bio-finger-active" : "bio-finger-inactive"
-                    }`}
-                    strokeWidth="2"
-                  />
-                  {/* Joint notches */}
-                  <line x1="68" y1="118" x2="90" y2="118" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-                  <line x1="68" y1="90" x2="90" y2="90" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-                  {/* Fingertip target */}
-                  <circle
-                    cx="79"
-                    cy="68"
-                    r={lockedFingers[1] ? "6" : "4"}
-                    className={`bio-finger-path ${lockedFingers[1] ? "fill-primary" : "fill-none stroke-primary/50"}`}
-                    strokeWidth="1.5"
-                  />
-                  {lockedFingers[1] && (
-                    <circle cx="79" cy="68" r="10" fill="none" stroke="oklch(0.82 0.16 85)" strokeWidth="1" strokeDasharray="3 2" className="animate-spin" />
-                  )}
-                </g>
-
-                {/* 3. MIDDLE FINGER */}
-                <g id="finger-middle">
-                  <path
-                    d="M 103 152 L 103 46 C 103 26 127 26 127 46 L 127 152 Z"
-                    className={`bio-finger-path ${
-                      lockedFingers[2] ? "bio-finger-active" : "bio-finger-inactive"
-                    }`}
-                    strokeWidth="2"
-                  />
-                  {/* Joint notches */}
-                  <line x1="103" y1="114" x2="127" y2="114" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-                  <line x1="103" y1="80" x2="127" y2="80" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-                  {/* Fingertip target */}
-                  <circle
-                    cx="115"
-                    cy="38"
-                    r={lockedFingers[2] ? "6" : "4"}
-                    className={`bio-finger-path ${lockedFingers[2] ? "fill-primary" : "fill-none stroke-primary/50"}`}
-                    strokeWidth="1.5"
-                  />
-                  {lockedFingers[2] && (
-                    <circle cx="115" cy="38" r="10" fill="none" stroke="oklch(0.82 0.16 85)" strokeWidth="1" strokeDasharray="3 2" className="animate-spin" />
-                  )}
-                </g>
-
-                {/* 4. RING FINGER */}
-                <g id="finger-ring">
-                  <path
-                    d="M 140 152 L 140 76 C 140 56 162 56 162 76 L 162 152 Z"
-                    className={`bio-finger-path ${
-                      lockedFingers[3] ? "bio-finger-active" : "bio-finger-inactive"
-                    }`}
-                    strokeWidth="2"
-                  />
-                  {/* Joint notches */}
-                  <line x1="140" y1="118" x2="162" y2="118" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-                  <line x1="140" y1="90" x2="162" y2="90" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-                  {/* Fingertip target */}
-                  <circle
-                    cx="151"
-                    cy="68"
-                    r={lockedFingers[3] ? "6" : "4"}
-                    className={`bio-finger-path ${lockedFingers[3] ? "fill-primary" : "fill-none stroke-primary/50"}`}
-                    strokeWidth="1.5"
-                  />
-                  {lockedFingers[3] && (
-                    <circle cx="151" cy="68" r="10" fill="none" stroke="oklch(0.82 0.16 85)" strokeWidth="1" strokeDasharray="3 2" className="animate-spin" />
-                  )}
-                </g>
-
-                {/* 5. PINKY FINGER */}
-                <g id="finger-pinky">
-                  <path
-                    d="M 172 160 L 172 108 C 172 90 192 90 192 108 L 192 170 Z"
-                    className={`bio-finger-path ${
-                      lockedFingers[4] ? "bio-finger-active" : "bio-finger-inactive"
-                    }`}
-                    strokeWidth="2"
-                  />
-                  {/* Joint notches */}
-                  <line x1="172" y1="134" x2="192" y2="134" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-                  {/* Fingertip target */}
-                  <circle
-                    cx="182"
-                    cy="100"
-                    r={lockedFingers[4] ? "6" : "4"}
-                    className={`bio-finger-path ${lockedFingers[4] ? "fill-primary" : "fill-none stroke-primary/50"}`}
-                    strokeWidth="1.5"
-                  />
-                  {lockedFingers[4] && (
-                    <circle cx="182" cy="100" r="10" fill="none" stroke="oklch(0.82 0.16 85)" strokeWidth="1" strokeDasharray="3 2" className="animate-spin" />
-                  )}
-                </g>
-
-                {/* PALM CORE BIOMETRIC SENSOR */}
-                <g id="palm-sensor" transform="translate(115, 202)">
-                  <circle r="26" fill="url(#core-glow)" />
-                  <circle r="24" fill="none" stroke="oklch(0.82 0.16 85 / 40%)" strokeWidth="1.5" strokeDasharray="4 2" />
-                  <circle r="16" fill="none" stroke="oklch(0.82 0.16 85 / 60%)" strokeWidth="1" />
-                  <circle r="8" fill="none" stroke="oklch(0.82 0.16 85 / 80%)" strokeWidth="1.5" />
-                  <circle r="3" fill="oklch(0.82 0.16 85)" />
-
-                  {/* Rotating radar sweep ray */}
-                  <line
-                    x1="0"
-                    y1="0"
-                    x2="24"
-                    y2="0"
-                    stroke="oklch(0.82 0.16 85)"
-                    strokeWidth="1.5"
-                    className="palm-radar-sweep"
-                  />
-                </g>
-              </svg>
-            </div>
-
-            {/* 5-FINGER BIOMETRIC NODES STATUS BADGES */}
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-              {FINGER_NAMES.map((f) => {
-                const isLocked = lockedFingers[f.id];
-                return (
+                {/* Central Holographic Core */}
+                <div className="relative flex h-28 w-28 items-center justify-center rounded-full border-2 border-primary/60 bg-primary/10 shadow-[0_0_35px_rgba(245,184,0,0.3)] backdrop-blur-md sm:h-32 sm:w-32">
                   <div
-                    key={f.id}
-                    className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.62rem] font-mono tracking-[0.2em] transition-all duration-300 sm:px-3 sm:text-xs ${
-                      isLocked
-                        ? "border-primary bg-primary/20 text-primary shadow-[0_0_12px_rgba(245,184,0,0.4)] scale-105"
-                        : "border-border/60 bg-card/40 text-muted-foreground"
-                    }`}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
-                        isLocked ? "bg-primary shadow-[var(--glow-gold)] animate-ping" : "bg-muted-foreground/40"
-                      }`}
-                    />
-                    <span>{f.label}</span>
-                    <span className="font-bold">{isLocked ? "✓" : "○"}</span>
+                    className="absolute inset-1.5 rounded-full border border-accent/40 border-dotted animate-spin"
+                    style={{ animationDuration: "12s" }}
+                  />
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 shadow-[0_0_20px_var(--neon)] sm:h-20 sm:w-20">
+                    <ShieldCheck className="h-8 w-8 text-primary sm:h-10 sm:w-10" />
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              </div>
 
-            {/* INSTRUCTION & REAL-TIME TOUCH STATUS */}
-            <div className="space-y-1">
-              <p className="display boot-hand-shimmer text-xs tracking-[0.38em] text-foreground/90 sm:text-base">
-                {activeCount === 0
-                  ? "TOUCH SCREEN WITH ALL 5 FINGERS OR HOLD PALM"
-                  : activeCount === 5
-                  ? "ALL 5 BIOMETRIC NODES LOCKED — ACCESS GRANTED"
-                  : `${activeCount} / 5 FINGERS DETECTED — PLACE REMAINING FINGERS`}
-              </p>
-              <p className="font-mono text-[0.65rem] tracking-[0.25em] text-primary/80">
-                {activeCount > 0
-                  ? `[ SENSING TOUCH POINTS: ${activeTouches.length || activeCount} / 5 NODES ]`
-                  : "[ MULTI-TOUCH BIOMETRIC SCANNER READY ]"}
-              </p>
+              {/* TELEMETRY SPECS */}
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[0.68rem] font-mono tracking-[0.2em] text-primary">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+                  <span>IBM PRESENTER NODE</span>
+                  <span className="font-bold">:: ONLINE</span>
+                </div>
+                <div className="flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-[0.68rem] font-mono tracking-[0.2em] text-muted-foreground">
+                  <span>20 HACKATHON CHALLENGES</span>
+                  <span className="text-primary font-bold">READY</span>
+                </div>
+                <div className="flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-[0.68rem] font-mono tracking-[0.2em] text-muted-foreground">
+                  <span>DISPLAY ENGINE</span>
+                  <span className="text-primary font-bold">CALIBRATED</span>
+                </div>
+              </div>
+
+              {/* PROMINENT LAUNCH BUTTON */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTrigger();
+                }}
+                className="group relative inline-flex items-center gap-3 overflow-hidden rounded-full border border-primary/70 bg-gradient-to-r from-primary/20 via-primary/35 to-primary/20 px-8 py-4 font-mono text-sm tracking-[0.25em] text-primary shadow-[0_0_30px_rgba(245,184,0,0.35)] backdrop-blur-md transition-all duration-300 hover:scale-105 hover:border-primary hover:bg-primary hover:text-black hover:shadow-[0_0_50px_rgba(245,184,0,0.7)] cursor-pointer active:scale-95"
+              >
+                <Play className="h-4 w-4 fill-current transition-transform group-hover:scale-125" />
+                <span className="font-bold">INITIALIZE REVEAL</span>
+                <span className="h-2 w-2 rounded-full bg-primary group-hover:bg-black animate-ping" />
+              </button>
+
+              {/* INSTRUCTION */}
+              <div className="space-y-1">
+                <p className="display boot-hand-shimmer text-xs tracking-[0.38em] text-foreground/90 sm:text-sm">
+                  CLICK BUTTON OR PRESS [SPACE] / [ENTER] TO LAUNCH
+                </p>
+                <p className="font-mono text-[0.65rem] tracking-[0.25em] text-primary/80">
+                  [ DESKTOP WORKSTATION AUTHENTICATED // SOUNDARYA IIC &times; IBM ]
+                </p>
+              </div>
             </div>
-          </div>
+          ) : deviceMode === "mobile" ? (
+            /* 2. MOBILE PHONE INTERFACE (ALL PHONES — NO 5-FINGER HAND) */
+            <div className="boot-idle-content flex flex-col items-center gap-4 py-3 text-center sm:gap-5 sm:py-5 max-w-sm mx-auto">
+              {/* HUD HEADER */}
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+                <p className="display text-xs tracking-[0.3em] text-primary font-semibold">
+                  AAVISHKARA &apos;26 // MOBILE ACCESS
+                </p>
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+              </div>
+
+              {/* COMPACT MOBILE BEACON GRAPHIC */}
+              <div className="relative flex items-center justify-center p-2">
+                <div className="absolute h-36 w-36 rounded-full border border-primary/25 boot-hand-ring" />
+                <div
+                  className="absolute h-44 w-44 rounded-full border border-accent/20 boot-hand-ring"
+                  style={{ animationDelay: "0.8s" }}
+                />
+
+                {/* Central Glowing Shield Core */}
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary/60 bg-primary/15 shadow-[0_0_25px_rgba(245,184,0,0.35)] backdrop-blur-md">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/25">
+                    <ShieldCheck className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+              </div>
+
+              {/* MOBILE BADGES */}
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[0.62rem] font-mono tracking-[0.18em] text-primary">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+                  <span>MOBILE NODE ONLINE</span>
+                </div>
+                <div className="flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-[0.62rem] font-mono tracking-[0.18em] text-muted-foreground">
+                  <span>IBM HACKATHON REVEAL</span>
+                </div>
+              </div>
+
+              {/* PROMINENT MOBILE TAP BUTTON */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTrigger();
+                }}
+                className="group relative flex w-full max-w-[280px] items-center justify-center gap-2.5 rounded-full border border-primary/70 bg-gradient-to-r from-primary/25 via-primary/35 to-primary/25 px-6 py-3.5 font-mono text-xs tracking-[0.22em] text-primary shadow-[0_0_25px_rgba(245,184,0,0.4)] active:scale-95 transition-all cursor-pointer"
+              >
+                <Play className="h-4 w-4 fill-current" />
+                <span className="font-bold">TAP TO ENTER REVEAL</span>
+              </button>
+
+              {/* INSTRUCTION */}
+              <div className="space-y-1">
+                <p className="display boot-hand-shimmer text-xs tracking-[0.3em] text-foreground/90">
+                  TAP BUTTON OR ANYWHERE TO BEGIN
+                </p>
+                <p className="font-mono text-[0.6rem] tracking-[0.2em] text-primary/80">
+                  [ AUDIO &amp; VIDEO TRANSMISSION READY ]
+                </p>
+              </div>
+            </div>
+          ) : (
+            /* 3. MULTI-TOUCH STAGE DISPLAY / KIOSK (>= 5 TOUCH POINTS) */
+            <div className="boot-idle-content flex flex-col items-center gap-5 py-4 text-center sm:gap-6 sm:py-6">
+              {/* HUD HEADER */}
+              <div className="flex items-center gap-3">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+                <p className="display text-xs tracking-[0.4em] text-primary sm:text-sm">
+                  BIOMETRIC TOUCH MATRIX // 5-FINGER RECOGNITION
+                </p>
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+              </div>
+
+              {/* 5-FINGER BIOMETRIC SCANNER GRAPHIC */}
+              <div className="relative flex items-center justify-center p-2">
+                {/* Outer pulsing scanning rings */}
+                <div className="absolute h-64 w-64 rounded-full border border-primary/25 boot-hand-ring" />
+                <div className="absolute h-64 w-64 rounded-full border border-accent/20 boot-hand-ring" style={{ animationDelay: "0.8s" }} />
+
+                {/* Charge SVG indicator */}
+                {charge > 0 && (
+                  <svg className="absolute h-72 w-72 pointer-events-none" viewBox="0 0 100 100">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="47"
+                      fill="none"
+                      stroke="oklch(0.82 0.16 85 / 80%)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeDasharray={`${charge * 295} 295`}
+                      transform="rotate(-90 50 50)"
+                      style={{ filter: "drop-shadow(0 0 8px oklch(0.82 0.16 85 / 75%))" }}
+                    />
+                  </svg>
+                )}
+
+                {/* FUTURISTIC BIOMETRIC HAND SVG WITH 5 INDEPENDENT FINGERS */}
+                <svg
+                  viewBox="0 0 240 280"
+                  className="h-56 w-56 sm:h-64 sm:w-64 select-none drop-shadow-[0_0_20px_rgba(245,184,0,0.15)]"
+                >
+                  <defs>
+                    {/* Cybernetic grid fill */}
+                    <pattern id="bio-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                      <path d="M 10 0 L 0 0 0 10" fill="none" stroke="oklch(0.82 0.16 85 / 15%)" strokeWidth="0.5" />
+                    </pattern>
+                    {/* Palm core gradient */}
+                    <radialGradient id="core-glow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="oklch(0.82 0.16 85 / 50%)" />
+                      <stop offset="70%" stopColor="oklch(0.82 0.16 85 / 10%)" />
+                      <stop offset="100%" stopColor="transparent" />
+                    </radialGradient>
+                  </defs>
+
+                  {/* PALM SKELETON BASE */}
+                  <path
+                    d="M 66 175 C 56 215 72 250 120 255 C 168 250 184 215 174 175 L 166 160 L 140 152 L 120 152 L 100 152 L 74 160 Z"
+                    className={`bio-finger-path ${
+                      activeCount >= 3 ? "bio-finger-active" : "bio-finger-inactive"
+                    }`}
+                    strokeWidth="2"
+                  />
+
+                  {/* 1. THUMB (LEFT) */}
+                  <g id="finger-thumb">
+                    <path
+                      d="M 76 182 L 48 162 C 34 148 24 134 32 118 C 40 104 56 108 68 124 L 84 152 Z"
+                      className={`bio-finger-path ${
+                        lockedFingers[0] ? "bio-finger-active" : "bio-finger-inactive"
+                      }`}
+                      strokeWidth="2"
+                    />
+                    {/* Joint notches */}
+                    <line x1="44" y1="138" x2="58" y2="148" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+                    {/* Fingertip target */}
+                    <circle
+                      cx="44"
+                      cy="120"
+                      r={lockedFingers[0] ? "6" : "4"}
+                      className={`bio-finger-path ${lockedFingers[0] ? "fill-primary" : "fill-none stroke-primary/50"}`}
+                      strokeWidth="1.5"
+                    />
+                    {lockedFingers[0] && (
+                      <circle cx="44" cy="120" r="10" fill="none" stroke="oklch(0.82 0.16 85)" strokeWidth="1" strokeDasharray="3 2" className="animate-spin" />
+                    )}
+                  </g>
+
+                  {/* 2. INDEX FINGER */}
+                  <g id="finger-index">
+                    <path
+                      d="M 68 152 L 68 76 C 68 56 90 56 90 76 L 90 152 Z"
+                      className={`bio-finger-path ${
+                        lockedFingers[1] ? "bio-finger-active" : "bio-finger-inactive"
+                      }`}
+                      strokeWidth="2"
+                    />
+                    {/* Joint notches */}
+                    <line x1="68" y1="118" x2="90" y2="118" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+                    <line x1="68" y1="90" x2="90" y2="90" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+                    {/* Fingertip target */}
+                    <circle
+                      cx="79"
+                      cy="68"
+                      r={lockedFingers[1] ? "6" : "4"}
+                      className={`bio-finger-path ${lockedFingers[1] ? "fill-primary" : "fill-none stroke-primary/50"}`}
+                      strokeWidth="1.5"
+                    />
+                    {lockedFingers[1] && (
+                      <circle cx="79" cy="68" r="10" fill="none" stroke="oklch(0.82 0.16 85)" strokeWidth="1" strokeDasharray="3 2" className="animate-spin" />
+                    )}
+                  </g>
+
+                  {/* 3. MIDDLE FINGER */}
+                  <g id="finger-middle">
+                    <path
+                      d="M 103 152 L 103 46 C 103 26 127 26 127 46 L 127 152 Z"
+                      className={`bio-finger-path ${
+                        lockedFingers[2] ? "bio-finger-active" : "bio-finger-inactive"
+                      }`}
+                      strokeWidth="2"
+                    />
+                    {/* Joint notches */}
+                    <line x1="103" y1="114" x2="127" y2="114" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+                    <line x1="103" y1="80" x2="127" y2="80" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+                    {/* Fingertip target */}
+                    <circle
+                      cx="115"
+                      cy="38"
+                      r={lockedFingers[2] ? "6" : "4"}
+                      className={`bio-finger-path ${lockedFingers[2] ? "fill-primary" : "fill-none stroke-primary/50"}`}
+                      strokeWidth="1.5"
+                    />
+                    {lockedFingers[2] && (
+                      <circle cx="115" cy="38" r="10" fill="none" stroke="oklch(0.82 0.16 85)" strokeWidth="1" strokeDasharray="3 2" className="animate-spin" />
+                    )}
+                  </g>
+
+                  {/* 4. RING FINGER */}
+                  <g id="finger-ring">
+                    <path
+                      d="M 140 152 L 140 76 C 140 56 162 56 162 76 L 162 152 Z"
+                      className={`bio-finger-path ${
+                        lockedFingers[3] ? "bio-finger-active" : "bio-finger-inactive"
+                      }`}
+                      strokeWidth="2"
+                    />
+                    {/* Joint notches */}
+                    <line x1="140" y1="118" x2="162" y2="118" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+                    <line x1="140" y1="90" x2="162" y2="90" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+                    {/* Fingertip target */}
+                    <circle
+                      cx="151"
+                      cy="68"
+                      r={lockedFingers[3] ? "6" : "4"}
+                      className={`bio-finger-path ${lockedFingers[3] ? "fill-primary" : "fill-none stroke-primary/50"}`}
+                      strokeWidth="1.5"
+                    />
+                    {lockedFingers[3] && (
+                      <circle cx="151" cy="68" r="10" fill="none" stroke="oklch(0.82 0.16 85)" strokeWidth="1" strokeDasharray="3 2" className="animate-spin" />
+                    )}
+                  </g>
+
+                  {/* 5. PINKY FINGER */}
+                  <g id="finger-pinky">
+                    <path
+                      d="M 172 160 L 172 108 C 172 90 192 90 192 108 L 192 170 Z"
+                      className={`bio-finger-path ${
+                        lockedFingers[4] ? "bio-finger-active" : "bio-finger-inactive"
+                      }`}
+                      strokeWidth="2"
+                    />
+                    {/* Joint notches */}
+                    <line x1="172" y1="134" x2="192" y2="134" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+                    {/* Fingertip target */}
+                    <circle
+                      cx="182"
+                      cy="100"
+                      r={lockedFingers[4] ? "6" : "4"}
+                      className={`bio-finger-path ${lockedFingers[4] ? "fill-primary" : "fill-none stroke-primary/50"}`}
+                      strokeWidth="1.5"
+                    />
+                    {lockedFingers[4] && (
+                      <circle cx="182" cy="100" r="10" fill="none" stroke="oklch(0.82 0.16 85)" strokeWidth="1" strokeDasharray="3 2" className="animate-spin" />
+                    )}
+                  </g>
+
+                  {/* PALM CORE BIOMETRIC SENSOR */}
+                  <g id="palm-sensor" transform="translate(115, 202)">
+                    <circle r="26" fill="url(#core-glow)" />
+                    <circle r="24" fill="none" stroke="oklch(0.82 0.16 85 / 40%)" strokeWidth="1.5" strokeDasharray="4 2" />
+                    <circle r="16" fill="none" stroke="oklch(0.82 0.16 85 / 60%)" strokeWidth="1" />
+                    <circle r="8" fill="none" stroke="oklch(0.82 0.16 85 / 80%)" strokeWidth="1.5" />
+                    <circle r="3" fill="oklch(0.82 0.16 85)" />
+
+                    {/* Rotating radar sweep ray */}
+                    <line
+                      x1="0"
+                      y1="0"
+                      x2="24"
+                      y2="0"
+                      stroke="oklch(0.82 0.16 85)"
+                      strokeWidth="1.5"
+                      className="palm-radar-sweep"
+                    />
+                  </g>
+                </svg>
+              </div>
+
+              {/* 5-FINGER BIOMETRIC NODES STATUS BADGES */}
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                {FINGER_NAMES.map((f) => {
+                  const isLocked = lockedFingers[f.id];
+                  return (
+                    <div
+                      key={f.id}
+                      className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.62rem] font-mono tracking-[0.2em] transition-all duration-300 sm:px-3 sm:text-xs ${
+                        isLocked
+                          ? "border-primary bg-primary/20 text-primary shadow-[0_0_12px_rgba(245,184,0,0.4)] scale-105"
+                          : "border-border/60 bg-card/40 text-muted-foreground"
+                      }`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
+                          isLocked ? "bg-primary shadow-[var(--glow-gold)] animate-ping" : "bg-muted-foreground/40"
+                        }`}
+                      />
+                      <span>{f.label}</span>
+                      <span className="font-bold">{isLocked ? "✓" : "○"}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* INSTRUCTION & REAL-TIME TOUCH STATUS */}
+              <div className="space-y-1">
+                <p className="display boot-hand-shimmer text-xs tracking-[0.38em] text-foreground/90 sm:text-base">
+                  {activeCount === 0
+                    ? "TOUCH SCREEN WITH ALL 5 FINGERS OR HOLD PALM"
+                    : activeCount === 5
+                    ? "ALL 5 BIOMETRIC NODES LOCKED — ACCESS GRANTED"
+                    : `${activeCount} / 5 FINGERS DETECTED — PLACE REMAINING FINGERS`}
+                </p>
+                <p className="font-mono text-[0.65rem] tracking-[0.25em] text-primary/80">
+                  {activeCount > 0
+                    ? `[ SENSING TOUCH POINTS: ${activeTouches.length || activeCount} / 5 NODES ]`
+                    : "[ MULTI-TOUCH BIOMETRIC SCANNER READY ]"}
+                </p>
+              </div>
+
+              {/* STAGE TOUCHSCREEN BYPASS FALLBACK */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTrigger();
+                }}
+                className="mt-1 text-[0.7rem] font-mono text-muted-foreground/70 hover:text-primary underline tracking-widest cursor-pointer transition-colors"
+              >
+                [ OR TAP TO INITIALIZE REVEAL ]
+              </button>
+            </div>
+          )
         ) : (
           /* ACTIVE VIDEO LOADING TRANSMISSION (20 SECONDS) */
           <div className="flex flex-col w-full text-left">

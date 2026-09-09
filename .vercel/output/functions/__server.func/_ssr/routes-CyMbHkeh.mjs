@@ -3,9 +3,11 @@ import { n as registerBootPreload, r as warmBootPreload, t as doorway_default } 
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { a as AnimatePresence, n as useMotionValue, r as useScroll, t as useSpring } from "../_libs/framer-motion+[...].mjs";
 import { t as motion } from "../_libs/motion.mjs";
-import { _ as ChevronDown, a as Terminal, b as ArrowLeft, c as ShieldCheck, d as Play, f as Lock, g as Copy, h as Funnel, i as Volume2, l as ShieldAlert, m as Grid3x3, n as Wrench, o as Sparkles, p as Layers, r as VolumeX, s as SkipForward, t as X, u as Search, v as Check, y as ArrowRight } from "../_libs/lucide-react.mjs";
+import { C as CloudUpload, D as Check, E as ChevronDown, O as ArrowRight, S as Copy, T as CircleAlert, _ as Grid3x3, a as Users, b as FileText, c as SkipForward, d as Send, f as Search, g as Layers, h as Lock, i as Volume2, k as ArrowLeft, l as ShieldCheck, m as Play, n as Wrench, o as Terminal, p as RefreshCw, r as VolumeX, s as Sparkles, t as X, u as ShieldAlert, v as Github, w as CircleCheck, x as ExternalLink, y as Funnel } from "../_libs/lucide-react.mjs";
 import { t as Lenis } from "../_libs/lenis.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-CElTET3G.js
+import { n as toast, t as Toaster } from "../_libs/sonner.mjs";
+import { t as createClient } from "../_libs/supabase__supabase-js.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-CyMbHkeh.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function SmoothScroll() {
@@ -642,7 +644,7 @@ function CaseStudyGridCard({ study, index, onSelect }) {
 		})]
 	});
 }
-function MagneticButton({ children, onClick, disabled, variant = "primary", className = "", ariaLabel }) {
+function MagneticButton({ children, onClick, disabled, variant = "primary", className = "", ariaLabel, type = "button" }) {
 	const ref = (0, import_react.useRef)(null);
 	const [offset, setOffset] = (0, import_react.useState)({
 		x: 0,
@@ -660,12 +662,12 @@ function MagneticButton({ children, onClick, disabled, variant = "primary", clas
 	const base = variant === "primary" ? "display border border-primary/70 bg-primary/10 px-8 py-4 text-base tracking-[0.35em] text-primary sm:px-12 sm:py-5 sm:text-lg" : "display border border-border bg-transparent px-5 py-3 text-xs tracking-[0.3em] text-muted-foreground hover:text-foreground sm:text-sm";
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.button, {
 		ref,
-		type: "button",
+		type,
 		"aria-label": ariaLabel,
 		onClick: () => {
 			if (disabled) return;
 			playSound("click");
-			onClick();
+			onClick?.();
 		},
 		disabled,
 		onMouseEnter: () => {
@@ -2749,6 +2751,7 @@ function BootSequence({ onDone }) {
 		false,
 		false
 	]);
+	const [deviceMode, setDeviceMode] = (0, import_react.useState)("desktop");
 	const rippleId = (0, import_react.useRef)(0);
 	const activeRef = (0, import_react.useRef)(false);
 	const holdTimer = (0, import_react.useRef)(null);
@@ -2778,6 +2781,20 @@ function BootSequence({ onDone }) {
 			setVisible(false);
 			doneRef.current(false);
 		}
+	}, []);
+	(0, import_react.useEffect)(() => {
+		const detectMode = () => {
+			if (typeof window === "undefined") return;
+			if (window.innerWidth < 768 || /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+				setDeviceMode("mobile");
+				return;
+			}
+			if ((navigator.maxTouchPoints || 0) >= 5) setDeviceMode("multitouch");
+			else setDeviceMode("desktop");
+		};
+		detectMode();
+		window.addEventListener("resize", detectMode);
+		return () => window.removeEventListener("resize", detectMode);
 	}, []);
 	(0, import_react.useEffect)(() => {
 		if (!visible) return;
@@ -2871,6 +2888,36 @@ function BootSequence({ onDone }) {
 			});
 		}
 	}, [addRipple]);
+	const handleTrigger = (0, import_react.useCallback)(() => {
+		if (activeRef.current) return;
+		primeVideo();
+		const cx = typeof window !== "undefined" ? window.innerWidth / 2 : 200;
+		const cy = typeof window !== "undefined" ? window.innerHeight / 2 : 200;
+		addRipple(cx, cy, true);
+		activate([{
+			x: cx,
+			y: cy
+		}]);
+	}, [
+		activate,
+		addRipple,
+		primeVideo
+	]);
+	(0, import_react.useEffect)(() => {
+		if (!visible || active) return;
+		const onKeyDown = (e) => {
+			if (e.code === "Space" || e.code === "Enter") {
+				e.preventDefault();
+				handleTrigger();
+			}
+		};
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, [
+		visible,
+		active,
+		handleTrigger
+	]);
 	const updateFingerStates = (0, import_react.useCallback)((touchesCount, currentCharge) => {
 		const chargeLocked = Math.min(5, Math.floor(currentCharge * 5.5));
 		const count = Math.max(touchesCount, chargeLocked);
@@ -2907,13 +2954,28 @@ function BootSequence({ onDone }) {
 		};
 		const onTouchStart = (e) => {
 			if (activeRef.current) return;
+			primeVideo();
+			if (deviceMode === "mobile") {
+				const t = e.touches[0];
+				const pt = t ? {
+					id: t.identifier,
+					x: t.clientX,
+					y: t.clientY
+				} : {
+					id: 0,
+					x: window.innerWidth / 2,
+					y: window.innerHeight / 2
+				};
+				addRipple(pt.x, pt.y, true);
+				activate([pt]);
+				return;
+			}
 			const touches = Array.from(e.touches).map((t) => ({
 				id: t.identifier,
 				x: t.clientX,
 				y: t.clientY
 			}));
 			setActiveTouches(touches);
-			primeVideo();
 			touches.forEach((t) => addRipple(t.x, t.y, false));
 			const fingerCount = touches.length;
 			updateFingerStates(fingerCount, 0);
@@ -2931,7 +2993,7 @@ function BootSequence({ onDone }) {
 			startCharge(touches, HOLD_FALLBACK_DURATION);
 		};
 		const onTouchMove = (e) => {
-			if (activeRef.current) return;
+			if (activeRef.current || deviceMode === "mobile") return;
 			const touches = Array.from(e.touches).map((t) => ({
 				id: t.identifier,
 				x: t.clientX,
@@ -2946,6 +3008,7 @@ function BootSequence({ onDone }) {
 			}
 		};
 		const onTouchEnd = (e) => {
+			if (deviceMode === "mobile") return;
 			const remainingTouches = Array.from(e.touches).map((t) => ({
 				id: t.identifier,
 				x: t.clientX,
@@ -2965,19 +3028,27 @@ function BootSequence({ onDone }) {
 		};
 		const onMouseDown = (e) => {
 			if (activeRef.current) return;
+			primeVideo();
+			if (deviceMode === "desktop") {
+				addRipple(e.clientX, e.clientY, true);
+				activate([{
+					x: e.clientX,
+					y: e.clientY
+				}]);
+				return;
+			}
 			const pt = {
 				id: 999,
 				x: e.clientX,
 				y: e.clientY
 			};
 			setActiveTouches([pt]);
-			primeVideo();
 			addRipple(e.clientX, e.clientY, false);
 			cancelCharge();
 			startCharge([pt], HOLD_FALLBACK_DURATION);
 		};
 		const onMouseMove = (e) => {
-			if (activeRef.current || holdTimer.current === null) return;
+			if (activeRef.current || holdTimer.current === null || deviceMode === "desktop") return;
 			setActiveTouches([{
 				id: 999,
 				x: e.clientX,
@@ -2985,7 +3056,7 @@ function BootSequence({ onDone }) {
 			}]);
 		};
 		const onMouseUp = () => {
-			if (activeRef.current) return;
+			if (activeRef.current || deviceMode === "desktop") return;
 			setActiveTouches([]);
 			cancelCharge();
 			setLockedFingers([
@@ -3020,7 +3091,9 @@ function BootSequence({ onDone }) {
 		activate,
 		addRipple,
 		charge,
-		updateFingerStates
+		updateFingerStates,
+		deviceMode,
+		primeVideo
 	]);
 	(0, import_react.useEffect)(() => () => {
 		timers.current.forEach(clearTimeout);
@@ -3040,7 +3113,7 @@ function BootSequence({ onDone }) {
 		children: [
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: `boot-grid absolute inset-0 ${active ? "boot-grid-hot" : ""}` }),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: `boot-scan absolute inset-0 ${active ? "boot-scan-hot" : ""}` }),
-			activeTouches.map((touch, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			deviceMode === "multitouch" && activeTouches.map((touch, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "pointer-events-none fixed z-[100] -translate-x-1/2 -translate-y-1/2 transition-transform duration-75",
 				style: {
 					left: touch.x,
@@ -3069,7 +3142,7 @@ function BootSequence({ onDone }) {
 					]
 				})
 			}, touch.id)),
-			activeTouches.length >= 2 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
+			deviceMode === "multitouch" && activeTouches.length >= 2 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 				className: "pointer-events-none fixed inset-0 z-[95] h-full w-full",
 				children: activeTouches.slice(0, -1).map((p1, idx) => {
 					const p2 = activeTouches[idx + 1];
@@ -3098,7 +3171,166 @@ function BootSequence({ onDone }) {
 					transform: finale ? `scale(${1 + (progress - 86) * .004})` : void 0,
 					transition: "transform 200ms linear"
 				},
-				children: !active ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				children: !active ? deviceMode === "desktop" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "boot-idle-content flex flex-col items-center gap-5 py-4 text-center sm:gap-6 sm:py-6 max-w-xl mx-auto",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-3",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1.5 w-1.5 rounded-full bg-primary animate-ping" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "display text-xs tracking-[0.4em] text-primary sm:text-sm font-semibold",
+									children: "SYSTEM TERMINAL // PRESENTATION ACCESS"
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1.5 w-1.5 rounded-full bg-primary animate-ping" })
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "relative flex items-center justify-center p-3 sm:p-5",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "absolute h-48 w-48 rounded-full border border-primary/25 boot-hand-ring sm:h-56 sm:w-56" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "absolute h-56 w-56 rounded-full border border-accent/20 boot-hand-ring sm:h-64 sm:w-64",
+									style: { animationDelay: "0.8s" }
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "absolute h-64 w-64 rounded-full border border-dashed border-primary/20 animate-spin sm:h-72 sm:w-72",
+									style: { animationDuration: "24s" }
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "relative flex h-28 w-28 items-center justify-center rounded-full border-2 border-primary/60 bg-primary/10 shadow-[0_0_35px_rgba(245,184,0,0.3)] backdrop-blur-md sm:h-32 sm:w-32",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "absolute inset-1.5 rounded-full border border-accent/40 border-dotted animate-spin",
+										style: { animationDuration: "12s" }
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 shadow-[0_0_20px_var(--neon)] sm:h-20 sm:w-20",
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "h-8 w-8 text-primary sm:h-10 sm:w-10" })
+									})]
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-wrap items-center justify-center gap-2 sm:gap-3",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[0.68rem] font-mono tracking-[0.2em] text-primary",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1.5 w-1.5 rounded-full bg-primary animate-ping" }),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "IBM PRESENTER NODE" }),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "font-bold",
+											children: ":: ONLINE"
+										})
+									]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-[0.68rem] font-mono tracking-[0.2em] text-muted-foreground",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "20 HACKATHON CHALLENGES" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-primary font-bold",
+										children: "READY"
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-[0.68rem] font-mono tracking-[0.2em] text-muted-foreground",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "DISPLAY ENGINE" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-primary font-bold",
+										children: "CALIBRATED"
+									})]
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: (e) => {
+								e.stopPropagation();
+								handleTrigger();
+							},
+							className: "group relative inline-flex items-center gap-3 overflow-hidden rounded-full border border-primary/70 bg-gradient-to-r from-primary/20 via-primary/35 to-primary/20 px-8 py-4 font-mono text-sm tracking-[0.25em] text-primary shadow-[0_0_30px_rgba(245,184,0,0.35)] backdrop-blur-md transition-all duration-300 hover:scale-105 hover:border-primary hover:bg-primary hover:text-black hover:shadow-[0_0_50px_rgba(245,184,0,0.7)] cursor-pointer active:scale-95",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "h-4 w-4 fill-current transition-transform group-hover:scale-125" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-bold",
+									children: "INITIALIZE REVEAL"
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-2 w-2 rounded-full bg-primary group-hover:bg-black animate-ping" })
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "space-y-1",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "display boot-hand-shimmer text-xs tracking-[0.38em] text-foreground/90 sm:text-sm",
+								children: "CLICK BUTTON OR PRESS [SPACE] / [ENTER] TO LAUNCH"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "font-mono text-[0.65rem] tracking-[0.25em] text-primary/80",
+								children: "[ DESKTOP WORKSTATION AUTHENTICATED // SOUNDARYA IIC × IBM ]"
+							})]
+						})
+					]
+				}) : deviceMode === "mobile" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "boot-idle-content flex flex-col items-center gap-4 py-3 text-center sm:gap-5 sm:py-5 max-w-sm mx-auto",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-2",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1.5 w-1.5 rounded-full bg-primary animate-ping" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "display text-xs tracking-[0.3em] text-primary font-semibold",
+									children: "AAVISHKARA '26 // MOBILE ACCESS"
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1.5 w-1.5 rounded-full bg-primary animate-ping" })
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "relative flex items-center justify-center p-2",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "absolute h-36 w-36 rounded-full border border-primary/25 boot-hand-ring" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "absolute h-44 w-44 rounded-full border border-accent/20 boot-hand-ring",
+									style: { animationDelay: "0.8s" }
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "relative flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary/60 bg-primary/15 shadow-[0_0_25px_rgba(245,184,0,0.35)] backdrop-blur-md",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "flex h-12 w-12 items-center justify-center rounded-full bg-primary/25",
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "h-6 w-6 text-primary" })
+									})
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-wrap items-center justify-center gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[0.62rem] font-mono tracking-[0.18em] text-primary",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1.5 w-1.5 rounded-full bg-primary animate-ping" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "MOBILE NODE ONLINE" })]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-[0.62rem] font-mono tracking-[0.18em] text-muted-foreground",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "IBM HACKATHON REVEAL" })
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: (e) => {
+								e.stopPropagation();
+								handleTrigger();
+							},
+							className: "group relative flex w-full max-w-[280px] items-center justify-center gap-2.5 rounded-full border border-primary/70 bg-gradient-to-r from-primary/25 via-primary/35 to-primary/25 px-6 py-3.5 font-mono text-xs tracking-[0.22em] text-primary shadow-[0_0_25px_rgba(245,184,0,0.4)] active:scale-95 transition-all cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "h-4 w-4 fill-current" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-bold",
+								children: "TAP TO ENTER REVEAL"
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "space-y-1",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "display boot-hand-shimmer text-xs tracking-[0.3em] text-foreground/90",
+								children: "TAP BUTTON OR ANYWHERE TO BEGIN"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "font-mono text-[0.6rem] tracking-[0.2em] text-primary/80",
+								children: "[ AUDIO & VIDEO TRANSMISSION READY ]"
+							})]
+						})
+					]
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "boot-idle-content flex flex-col items-center gap-5 py-4 text-center sm:gap-6 sm:py-6",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -3455,6 +3687,15 @@ function BootSequence({ onDone }) {
 								className: "font-mono text-[0.65rem] tracking-[0.25em] text-primary/80",
 								children: activeCount > 0 ? `[ SENSING TOUCH POINTS: ${activeTouches.length || activeCount} / 5 NODES ]` : "[ MULTI-TOUCH BIOMETRIC SCANNER READY ]"
 							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: (e) => {
+								e.stopPropagation();
+								handleTrigger();
+							},
+							className: "mt-1 text-[0.7rem] font-mono text-muted-foreground/70 hover:text-primary underline tracking-widest cursor-pointer transition-colors",
+							children: "[ OR TAP TO INITIALIZE REVEAL ]"
 						})
 					]
 				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -3739,6 +3980,1776 @@ function CinematicTeaser({ onDone, videoSrc = "/aavishkara-short.mp4" }) {
 		]
 	}, "teaser-overlay") });
 }
+var CASE_STUDY_ASSIGNMENTS = [
+	{
+		code: "JP-001",
+		title: "Log Security Analyzer & Dynamic Risk Profiler",
+		category: "Cyber Security / Log Analytics",
+		teams: ["Team Ace"]
+	},
+	{
+		code: "JP-003",
+		title: "Intelligent Source Code & Quality Review Assistant",
+		category: "DevOps / Code Quality & LLM",
+		teams: ["Code Xeno", "Binary Bosses"]
+	},
+	{
+		code: "JP-004",
+		title: "API Gateway Traffic Monitor, Rate Limiter & Anomaly Detector",
+		category: "API Management / Networking & Security",
+		teams: ["Quantum Sparks"]
+	},
+	{
+		code: "JP-005",
+		title: "Customer Complaint NLP Classifier & SLA Ticket Router",
+		category: "NLP / Customer Experience & Ops",
+		teams: ["Team 404", "TechNova"]
+	},
+	{
+		code: "JP-008",
+		title: "Demand Forecasting & Inventory Replacement Assistant",
+		category: "Supply Chain / Predictive Analytics",
+		teams: ["Genxcoders"]
+	},
+	{
+		code: "JP-009",
+		title: "Automated REST API Testing and Anomaly Diagnosis Tool",
+		category: "Software Quality / Automated Testing",
+		teams: ["Techno Spark", "Lemuria"]
+	},
+	{
+		code: "JP-011",
+		title: "Employee Skill Gap Analyzer & Learning Path Recommender",
+		category: "HR Tech / Career Path Optimization",
+		teams: [
+			"TechMinds",
+			"Fire",
+			"Asha",
+			"Coders Afterclass",
+			"LunarDevs"
+		]
+	},
+	{
+		code: "JP-012",
+		title: "Customer Arrival Queue Simulation & Resource Allocation Optimizer",
+		category: "Operations Research / Queue Optimization",
+		teams: ["Vortex", "Elite Squad"]
+	},
+	{
+		code: "JP-014",
+		title: "Service Dependency Graph & Failure Blast-Radius Analyzer",
+		category: "Distributed Systems / Reliability Engineering",
+		teams: ["Low Cortisol"]
+	},
+	{
+		code: "JP-018",
+		title: "Cryptography File Integrity Monitor & Change Investigator",
+		category: "Information Security / System Auditing",
+		teams: ["Pydrip"]
+	},
+	{
+		code: "JP-019",
+		title: "Last-Mile Delivery Route Optimization & Late Delivery Risk Predictor",
+		category: "Logistics / Route Optimization & ML",
+		teams: ["Team Helio", "Code with Errors"]
+	},
+	{
+		code: "JP-020",
+		title: "Enterprise Document Question-Answering with RAG",
+		category: "Generative AI / Enterprise Knowledge Retrieval",
+		teams: [
+			"Predators",
+			"404 Error Not Found",
+			"Innovex",
+			"Medora",
+			"Nexora",
+			"HackCrew"
+		]
+	}
+];
+var ALL_TEAMS = [
+	{
+		teamNumber: 1,
+		teamName: "Predators",
+		caseStudyCode: "JP-020",
+		caseStudyTitle: "Enterprise Document Question-Answering with RAG",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "9:00-9:10 AM"
+	},
+	{
+		teamNumber: 2,
+		teamName: "Team Helio",
+		caseStudyCode: "JP-019",
+		caseStudyTitle: "Last-Mile Delivery Route Optimization & Late Delivery Risk Predictor",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "9:11-9:21 AM"
+	},
+	{
+		teamNumber: 3,
+		teamName: "Low Cortisol",
+		caseStudyCode: "JP-014",
+		caseStudyTitle: "Service Dependency Graph & Failure Blast-Radius Analyzer",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "9:22-9:32 AM"
+	},
+	{
+		teamNumber: 4,
+		teamName: "404 Error Not Found",
+		caseStudyCode: "JP-020",
+		caseStudyTitle: "Enterprise Document Question-Answering with RAG",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "9:33-9:43 AM"
+	},
+	{
+		teamNumber: 5,
+		teamName: "Innovex",
+		caseStudyCode: "JP-020",
+		caseStudyTitle: "Enterprise Document Question-Answering with RAG",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "9:44-9:54 AM"
+	},
+	{
+		teamNumber: 6,
+		teamName: "Genxcoders",
+		caseStudyCode: "JP-008",
+		caseStudyTitle: "Demand Forecasting & Inventory Replacement Assistant",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "9:55-10:05 AM"
+	},
+	{
+		teamNumber: 7,
+		teamName: "TechMinds",
+		caseStudyCode: "JP-011",
+		caseStudyTitle: "Employee Skill Gap Analyzer & Learning Path Recommender",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "10:06-10:16 AM"
+	},
+	{
+		teamNumber: 8,
+		teamName: "Team 404",
+		caseStudyCode: "JP-005",
+		caseStudyTitle: "Customer Complaint NLP Classifier & SLA Ticket Router",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "10:17-10:27 AM"
+	},
+	{
+		teamNumber: 9,
+		teamName: "Medora",
+		caseStudyCode: "JP-020",
+		caseStudyTitle: "Enterprise Document Question-Answering with RAG",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "10:28-10:38 AM"
+	},
+	{
+		teamNumber: 10,
+		teamName: "Team Ace",
+		caseStudyCode: "JP-001",
+		caseStudyTitle: "Log Security Analyzer & Dynamic Risk Profiler",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "10:39-10:49 AM"
+	},
+	{
+		teamNumber: 11,
+		teamName: "Quantum Sparks",
+		caseStudyCode: "JP-004",
+		caseStudyTitle: "API Gateway Traffic Monitor, Rate Limiter & Anomaly Detector",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "10:50-11:00 AM"
+	},
+	{
+		teamNumber: 12,
+		teamName: "Nexora",
+		caseStudyCode: "JP-020",
+		caseStudyTitle: "Enterprise Document Question-Answering with RAG",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "11:01-11:11 AM"
+	},
+	{
+		teamNumber: 13,
+		teamName: "Fire",
+		caseStudyCode: "JP-011",
+		caseStudyTitle: "Employee Skill Gap Analyzer & Learning Path Recommender",
+		group: 1,
+		presentationHall: "Sri Ratan Tata Hall",
+		presentationTime: "11:12-11:22 AM"
+	},
+	{
+		teamNumber: 14,
+		teamName: "Pydrip",
+		caseStudyCode: "JP-018",
+		caseStudyTitle: "Cryptography File Integrity Monitor & Change Investigator",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "9:00-9:10 AM"
+	},
+	{
+		teamNumber: 15,
+		teamName: "Vortex",
+		caseStudyCode: "JP-012",
+		caseStudyTitle: "Customer Arrival Queue Simulation & Resource Allocation Optimizer",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "9:11-9:21 AM"
+	},
+	{
+		teamNumber: 16,
+		teamName: "Code with Errors",
+		caseStudyCode: "JP-019",
+		caseStudyTitle: "Last-Mile Delivery Route Optimization & Late Delivery Risk Predictor",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "9:22-9:32 AM"
+	},
+	{
+		teamNumber: 17,
+		teamName: "Asha",
+		caseStudyCode: "JP-011",
+		caseStudyTitle: "Employee Skill Gap Analyzer & Learning Path Recommender",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "9:33-9:43 AM"
+	},
+	{
+		teamNumber: 18,
+		teamName: "Code Xeno",
+		caseStudyCode: "JP-003",
+		caseStudyTitle: "Intelligent Source Code & Quality Review Assistant",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "9:44-9:54 AM"
+	},
+	{
+		teamNumber: 19,
+		teamName: "Coders Afterclass",
+		caseStudyCode: "JP-011",
+		caseStudyTitle: "Employee Skill Gap Analyzer & Learning Path Recommender",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "9:55-10:05 AM"
+	},
+	{
+		teamNumber: 20,
+		teamName: "TechNova",
+		caseStudyCode: "JP-005",
+		caseStudyTitle: "Customer Complaint NLP Classifier & SLA Ticket Router",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "10:06-10:16 AM"
+	},
+	{
+		teamNumber: 21,
+		teamName: "HackCrew",
+		caseStudyCode: "JP-020",
+		caseStudyTitle: "Enterprise Document Question-Answering with RAG",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "10:17-10:27 AM"
+	},
+	{
+		teamNumber: 22,
+		teamName: "Techno Spark",
+		caseStudyCode: "JP-009",
+		caseStudyTitle: "Automated REST API Testing and Anomaly Diagnosis Tool",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "10:28-10:38 AM"
+	},
+	{
+		teamNumber: 23,
+		teamName: "LunarDevs",
+		caseStudyCode: "JP-011",
+		caseStudyTitle: "Employee Skill Gap Analyzer & Learning Path Recommender",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "10:39-10:49 AM"
+	},
+	{
+		teamNumber: 24,
+		teamName: "Elite Squad",
+		caseStudyCode: "JP-012",
+		caseStudyTitle: "Customer Arrival Queue Simulation & Resource Allocation Optimizer",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "10:50-11:00 AM"
+	},
+	{
+		teamNumber: 25,
+		teamName: "Binary Bosses",
+		caseStudyCode: "JP-003",
+		caseStudyTitle: "Intelligent Source Code & Quality Review Assistant",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "11:01-11:11 AM"
+	},
+	{
+		teamNumber: 26,
+		teamName: "Lemuria",
+		caseStudyCode: "JP-009",
+		caseStudyTitle: "Automated REST API Testing and Anomaly Diagnosis Tool",
+		group: 2,
+		presentationHall: "MBA Room 107",
+		presentationTime: "11:12-11:22 AM"
+	}
+];
+function getTeamAssignment(teamName) {
+	if (!teamName) return void 0;
+	const raw = teamName.trim().toLowerCase();
+	const cleaned = raw.replace(/^team\s*\d+\s*[-–]\s*/i, "").trim();
+	return ALL_TEAMS.find((t) => {
+		const tName = t.teamName.toLowerCase();
+		return tName === raw || tName === cleaned || raw.includes(tName) || tName.includes(raw);
+	});
+}
+function TeamAssignmentsSection() {
+	const containerRef = (0, import_react.useRef)(null);
+	const leftColRef = (0, import_react.useRef)(null);
+	const rightColRef = (0, import_react.useRef)(null);
+	const [hoveredTeam, setHoveredTeam] = (0, import_react.useState)(null);
+	const [hoveredCaseStudy, setHoveredCaseStudy] = (0, import_react.useState)(null);
+	const [selectedCaseStudy, setSelectedCaseStudy] = (0, import_react.useState)(null);
+	const [selectedTeam, setSelectedTeam] = (0, import_react.useState)(null);
+	const [searchQuery, setSearchQuery] = (0, import_react.useState)("");
+	const [lines, setLines] = (0, import_react.useState)([]);
+	const [isMounted, setIsMounted] = (0, import_react.useState)(false);
+	const [expandedMobileCase, setExpandedMobileCase] = (0, import_react.useState)("JP-020");
+	(0, import_react.useId)();
+	(0, import_react.useEffect)(() => {
+		setIsMounted(true);
+	}, []);
+	const filteredCaseStudies = (0, import_react.useMemo)(() => {
+		if (!searchQuery.trim()) return CASE_STUDY_ASSIGNMENTS;
+		const q = searchQuery.toLowerCase().trim();
+		return CASE_STUDY_ASSIGNMENTS.filter((cs) => cs.code.toLowerCase().includes(q) || cs.title.toLowerCase().includes(q) || cs.category.toLowerCase().includes(q) || cs.teams.some((t) => t.toLowerCase().includes(q)));
+	}, [searchQuery]);
+	const filteredTeams = (0, import_react.useMemo)(() => {
+		if (!searchQuery.trim()) return ALL_TEAMS;
+		const q = searchQuery.toLowerCase().trim();
+		return ALL_TEAMS.filter((t) => t.teamName.toLowerCase().includes(q) || t.caseStudyCode.toLowerCase().includes(q) || t.caseStudyTitle.toLowerCase().includes(q));
+	}, [searchQuery]);
+	const activeCaseStudyCode = (0, import_react.useMemo)(() => {
+		if (hoveredCaseStudy) return hoveredCaseStudy;
+		if (selectedCaseStudy) return selectedCaseStudy;
+		if (hoveredTeam) {
+			const match = ALL_TEAMS.find((t) => t.teamName === hoveredTeam);
+			return match ? match.caseStudyCode : null;
+		}
+		if (selectedTeam) {
+			const match = ALL_TEAMS.find((t) => t.teamName === selectedTeam);
+			return match ? match.caseStudyCode : null;
+		}
+		return null;
+	}, [
+		hoveredCaseStudy,
+		selectedCaseStudy,
+		hoveredTeam,
+		selectedTeam
+	]);
+	const activeTeamNames = (0, import_react.useMemo)(() => {
+		if (hoveredTeam) return [hoveredTeam];
+		if (selectedTeam) return [selectedTeam];
+		if (activeCaseStudyCode) {
+			const match = CASE_STUDY_ASSIGNMENTS.find((cs) => cs.code === activeCaseStudyCode);
+			return match ? match.teams : [];
+		}
+		return [];
+	}, [
+		hoveredTeam,
+		selectedTeam,
+		activeCaseStudyCode
+	]);
+	const isAnythingActive = Boolean(activeCaseStudyCode || activeTeamNames.length > 0);
+	const recalculateLines = () => {
+		if (!containerRef.current || window.innerWidth < 1024) {
+			setLines([]);
+			return;
+		}
+		const containerRect = containerRef.current.getBoundingClientRect();
+		const newLines = [];
+		ALL_TEAMS.forEach((team) => {
+			const teamEl = containerRef.current?.querySelector(`[data-team-id="${encodeURIComponent(team.teamName)}"]`);
+			const csEl = containerRef.current?.querySelector(`[data-cs-id="${team.caseStudyCode}"]`);
+			if (teamEl && csEl) {
+				const teamRect = teamEl.getBoundingClientRect();
+				const csRect = csEl.getBoundingClientRect();
+				const startX = teamRect.left - containerRect.left;
+				const startY = teamRect.top + teamRect.height / 2 - containerRect.top;
+				const endX = csRect.right - containerRect.left;
+				const endY = csRect.top + csRect.height / 2 - containerRect.top;
+				const dx = startX - endX;
+				const pathD = `M ${startX} ${startY} C ${startX - dx * .45} ${startY}, ${endX + dx * .45} ${endY}, ${endX} ${endY}`;
+				newLines.push({
+					id: `${team.teamName}->${team.caseStudyCode}`,
+					teamName: team.teamName,
+					caseStudyCode: team.caseStudyCode,
+					start: {
+						x: startX,
+						y: startY
+					},
+					end: {
+						x: endX,
+						y: endY
+					},
+					pathD
+				});
+			}
+		});
+		setLines(newLines);
+	};
+	(0, import_react.useEffect)(() => {
+		if (!isMounted) return;
+		recalculateLines();
+		const timer = setTimeout(recalculateLines, 150);
+		const timer2 = setTimeout(recalculateLines, 500);
+		const handleResize = () => {
+			recalculateLines();
+		};
+		window.addEventListener("resize", handleResize);
+		const resizeObserver = new ResizeObserver(() => {
+			recalculateLines();
+		});
+		if (containerRef.current) resizeObserver.observe(containerRef.current);
+		return () => {
+			clearTimeout(timer);
+			clearTimeout(timer2);
+			window.removeEventListener("resize", handleResize);
+			resizeObserver.disconnect();
+		};
+	}, [
+		isMounted,
+		filteredCaseStudies.length,
+		filteredTeams.length
+	]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+		id: "team-assignments",
+		className: "relative z-10 w-full px-4 py-24 sm:px-6 lg:px-10 overflow-hidden bg-background",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				"aria-hidden": true,
+				className: "pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-96 w-[80rem] bg-radial from-primary/10 via-accent/5 to-transparent blur-3xl"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				"aria-hidden": true,
+				className: "pointer-events-none absolute bottom-10 left-1/3 h-72 w-72 bg-radial from-accent/15 to-transparent blur-3xl"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mx-auto max-w-7xl",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex flex-col items-center text-center",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+								initial: {
+									opacity: 0,
+									y: 14
+								},
+								whileInView: {
+									opacity: 1,
+									y: 0
+								},
+								viewport: {
+									once: true,
+									amount: .5
+								},
+								transition: {
+									duration: .8,
+									ease: EASE$1
+								},
+								className: "flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-mono uppercase tracking-widest text-primary shadow-[0_0_15px_-4px_var(--gold)]",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Users, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Official Allocations • 26 Teams" })]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.h2, {
+								initial: {
+									opacity: 0,
+									filter: "blur(10px)"
+								},
+								whileInView: {
+									opacity: 1,
+									filter: "blur(0px)"
+								},
+								viewport: {
+									once: true,
+									amount: .5
+								},
+								transition: {
+									duration: 1.2,
+									delay: .1,
+									ease: EASE$1
+								},
+								className: "display text-glow-gold mt-6 text-3xl sm:text-5xl md:text-6xl text-primary",
+								children: "Team Assignments Reveal"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.p, {
+								initial: { opacity: 0 },
+								whileInView: { opacity: 1 },
+								viewport: {
+									once: true,
+									amount: .5
+								},
+								transition: {
+									duration: 1,
+									delay: .25
+								},
+								className: "mt-4 max-w-2xl text-sm sm:text-base text-muted-foreground",
+								children: "Explore which team tackles which enterprise challenge. Hover over any team to illuminate its connected problem, or select a case study to reveal all competing squads."
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "mt-8 flex w-full max-w-md items-center gap-2 rounded-full border border-primary/30 bg-card/70 px-4 py-2 shadow-[0_0_20px_-10px_var(--gold)] backdrop-blur-md",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "h-4 w-4 text-primary/70 shrink-0" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: "text",
+										value: searchQuery,
+										onChange: (e) => setSearchQuery(e.target.value),
+										placeholder: "Find your team or problem code (e.g., Predators, JP-011)...",
+										className: "w-full bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+									}),
+									searchQuery && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+										type: "button",
+										onClick: () => setSearchQuery(""),
+										className: "text-xs text-muted-foreground hover:text-foreground cursor-pointer px-1",
+										children: "Clear"
+									})
+								]
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-8 hidden lg:flex items-center justify-between px-4 text-xs font-mono text-muted-foreground/80",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-2 w-2 rounded-full bg-primary animate-pulse" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "CASE STUDIES (12 Problems)" })]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-4",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "inline-flex items-center gap-1.5 rounded-full border border-purple-500/40 bg-purple-500/10 px-2.5 py-0.5 text-[0.7rem] text-purple-300",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1.5 w-1.5 rounded-full bg-purple-400" }), "Group 1: Sri Ratan Tata Hall"]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-[0.7rem] text-emerald-300",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1.5 w-1.5 rounded-full bg-emerald-400" }), "Group 2: MBA Room 107"]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "flex items-center gap-2 text-foreground/70",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "TEAM SQUADS (26 Teams)" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-2 w-2 rounded-full bg-accent animate-pulse" })]
+								})
+							]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						ref: containerRef,
+						className: "relative mt-8 hidden lg:block w-full min-h-[920px]",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+							className: "pointer-events-none absolute inset-0 z-10 h-full w-full",
+							"aria-hidden": true,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("filter", {
+									id: "gold-glow",
+									x: "-20%",
+									y: "-20%",
+									width: "140%",
+									height: "140%",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("feGaussianBlur", {
+										stdDeviation: "3.5",
+										result: "blur"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("feMerge", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("feMergeNode", { in: "blur" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })] })]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+									id: "rest-line-gradient",
+									x1: "100%",
+									y1: "0%",
+									x2: "0%",
+									y2: "0%",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+										offset: "0%",
+										stopColor: "oklch(0.82 0.16 85)",
+										stopOpacity: "0.4"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+										offset: "100%",
+										stopColor: "oklch(0.82 0.16 85)",
+										stopOpacity: "0.75"
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+									id: "active-line-gradient",
+									x1: "100%",
+									y1: "0%",
+									x2: "0%",
+									y2: "0%",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+											offset: "0%",
+											stopColor: "#ffffff",
+											stopOpacity: "1"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+											offset: "40%",
+											stopColor: "oklch(0.9 0.1 90)",
+											stopOpacity: "1"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+											offset: "100%",
+											stopColor: "oklch(0.82 0.16 85)",
+											stopOpacity: "1"
+										})
+									]
+								})
+							] }), lines.map((line, idx) => {
+								const isConnected = activeCaseStudyCode === line.caseStudyCode || activeTeamNames.includes(line.teamName);
+								const isDimmed = isAnythingActive && !isConnected;
+								return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", {
+									className: "transition-opacity duration-300",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.path, {
+											d: line.pathD,
+											fill: "none",
+											stroke: isConnected ? "url(#active-line-gradient)" : "url(#rest-line-gradient)",
+											strokeWidth: isConnected ? 3 : 1.5,
+											strokeOpacity: isDimmed ? .08 : isConnected ? 1 : .3,
+											filter: isConnected ? "url(#gold-glow)" : void 0,
+											initial: {
+												pathLength: 0,
+												opacity: 0
+											},
+											whileInView: {
+												pathLength: 1,
+												opacity: isDimmed ? .08 : isConnected ? 1 : .3
+											},
+											viewport: { once: true },
+											transition: {
+												duration: .9,
+												delay: Math.min(1.2, idx * .035),
+												ease: EASE$1
+											}
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+											cx: line.end.x,
+											cy: line.end.y,
+											r: isConnected ? 4.5 : 2.5,
+											fill: isConnected ? "#ffffff" : "oklch(0.82 0.16 85)",
+											fillOpacity: isDimmed ? .1 : isConnected ? 1 : .65,
+											filter: isConnected ? "url(#gold-glow)" : void 0
+										}),
+										isConnected && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.path, {
+											d: line.pathD,
+											fill: "none",
+											stroke: "#ffffff",
+											strokeWidth: 4,
+											strokeLinecap: "round",
+											strokeDasharray: "24 160",
+											initial: { strokeDashoffset: 0 },
+											animate: { strokeDashoffset: -368 },
+											transition: {
+												duration: 1.4,
+												repeat: Infinity,
+												ease: "linear"
+											},
+											filter: "url(#gold-glow)"
+										})
+									]
+								}, line.id);
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "relative z-20 grid grid-cols-12 gap-8 items-start",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								ref: leftColRef,
+								className: "col-span-6 space-y-4",
+								children: CASE_STUDY_ASSIGNMENTS.map((cs) => {
+									const isSelected = activeCaseStudyCode === cs.code;
+									const isDimmed = isAnythingActive && !isSelected;
+									return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+										"data-cs-id": cs.code,
+										onMouseEnter: () => {
+											playSound("hover");
+											setHoveredCaseStudy(cs.code);
+										},
+										onMouseLeave: () => setHoveredCaseStudy(null),
+										onClick: () => {
+											playSound("click");
+											setSelectedCaseStudy((prev) => prev === cs.code ? null : cs.code);
+											setSelectedTeam(null);
+										},
+										whileHover: { scale: 1.015 },
+										transition: { duration: .2 },
+										className: `group relative rounded-xl border p-4 transition-all duration-300 cursor-pointer select-none ${isSelected ? "border-primary bg-card/95 shadow-[0_0_30px_-5px_var(--gold),inset_0_0_20px_rgba(245,184,0,0.15)] ring-1 ring-primary" : "border-border/60 bg-card/40 hover:border-primary/60 hover:bg-card/70"} ${isDimmed ? "opacity-20 blur-[0.4px]" : "opacity-100"}`,
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex items-start justify-between gap-3",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex items-center gap-2",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+														className: `font-mono text-xs font-bold px-2 py-0.5 rounded ${isSelected ? "bg-primary text-primary-foreground shadow-[0_0_10px_var(--gold)]" : "bg-primary/15 text-primary border border-primary/30"}`,
+														children: cs.code
+													}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+														className: "text-[0.65rem] font-mono uppercase tracking-widest text-muted-foreground",
+														children: cs.category
+													})]
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: `inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-mono font-semibold transition-colors ${isSelected ? "bg-accent/30 text-foreground border border-accent" : "bg-secondary text-muted-foreground border border-border/80"}`,
+													children: [
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Users, { className: "h-3 w-3" }),
+														cs.teams.length,
+														" ",
+														cs.teams.length === 1 ? "team" : "teams"
+													]
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+												className: `mt-2 font-display text-base font-semibold tracking-wide transition-colors ${isSelected ? "text-primary text-glow-gold" : "text-foreground/90 group-hover:text-primary"}`,
+												children: cs.title
+											}),
+											isSelected && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+												initial: {
+													opacity: 0,
+													height: 0
+												},
+												animate: {
+													opacity: 1,
+													height: "auto"
+												},
+												className: "mt-3 pt-2.5 border-t border-primary/25 flex flex-wrap gap-2",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "text-[0.65rem] font-mono text-muted-foreground mr-1 self-center",
+													children: "Assigned:"
+												}), cs.teams.map((t) => {
+													const tObj = ALL_TEAMS.find((team) => team.teamName === t);
+													return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+														className: "inline-flex items-center gap-1.5 rounded bg-primary/20 border border-primary/40 px-2.5 py-1 text-[0.72rem] font-mono text-primary font-medium",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: t }), tObj && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+															className: "text-[0.62rem] opacity-75 font-normal",
+															children: [
+																"(",
+																tObj.group === 1 ? "G1" : "G2",
+																" • ",
+																tObj.presentationTime,
+																")"
+															]
+														})]
+													}, t);
+												})]
+											})
+										]
+									}, cs.code);
+								})
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								ref: rightColRef,
+								className: "col-span-6 space-y-2.5",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "grid grid-cols-2 gap-2.5",
+									children: ALL_TEAMS.map((team) => {
+										const isTeamActive = activeTeamNames.includes(team.teamName);
+										const isDimmed = isAnythingActive && !isTeamActive;
+										return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+											"data-team-id": encodeURIComponent(team.teamName),
+											onMouseEnter: () => {
+												playSound("hover");
+												setHoveredTeam(team.teamName);
+											},
+											onMouseLeave: () => setHoveredTeam(null),
+											onClick: () => {
+												playSound("click");
+												setSelectedTeam((prev) => prev === team.teamName ? null : team.teamName);
+												setSelectedCaseStudy(null);
+											},
+											whileHover: { scale: 1.025 },
+											transition: { duration: .18 },
+											className: `group relative flex flex-col justify-between rounded-lg border p-2.5 text-xs transition-all duration-300 cursor-pointer select-none ${isTeamActive ? "border-primary bg-primary/20 shadow-[0_0_20px_-3px_var(--gold)] ring-1 ring-primary text-foreground font-semibold" : "border-border/60 bg-card/45 hover:border-primary/50 hover:bg-card/80 text-foreground/85"} ${isDimmed ? "opacity-20 blur-[0.4px]" : "opacity-100"}`,
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex items-center justify-between gap-1.5",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex items-center gap-1.5 min-w-0",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `h-1.5 w-1.5 shrink-0 rounded-full ${isTeamActive ? "bg-primary shadow-[0_0_8px_var(--gold)]" : "bg-muted-foreground/40"}` }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+														className: "truncate font-mono font-medium",
+														children: team.teamName
+													})]
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: `shrink-0 rounded px-1.5 py-0.5 text-[0.62rem] font-mono font-bold ${isTeamActive ? "bg-primary text-primary-foreground" : "bg-secondary text-primary/90 border border-primary/20"}`,
+													children: team.caseStudyCode
+												})]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "mt-2 flex items-center justify-between gap-1.5 pt-1.5 border-t border-border/40",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: `inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.6rem] font-mono border ${team.group === 1 ? "border-purple-500/40 bg-purple-500/15 text-purple-300" : "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"}`,
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `h-1 w-1 rounded-full ${team.group === 1 ? "bg-purple-400" : "bg-emerald-400"}` }), team.group === 1 ? "G1: Ratan Tata" : "G2: MBA 107"]
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "text-[0.65rem] font-mono text-muted-foreground tracking-tight",
+													children: team.presentationTime
+												})]
+											})]
+										}, team.teamName);
+									})
+								})
+							})]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-8 space-y-3 lg:hidden",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "rounded-lg border border-primary/30 bg-card/60 p-3 text-center text-xs font-mono text-muted-foreground",
+							children: "Tap any case study to view its assigned squads"
+						}), filteredCaseStudies.map((cs) => {
+							const isExpanded = expandedMobileCase === cs.code;
+							return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "overflow-hidden rounded-xl border border-border/70 bg-card/70 backdrop-blur-sm transition-colors",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "button",
+									onClick: () => {
+										playSound("click");
+										setExpandedMobileCase(isExpanded ? null : cs.code);
+									},
+									className: "flex w-full items-center justify-between p-4 text-left cursor-pointer",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "space-y-1 pr-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center gap-2",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "rounded bg-primary/20 border border-primary/40 px-2 py-0.5 font-mono text-xs font-bold text-primary",
+												children: cs.code
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+												className: "rounded-full bg-secondary px-2 py-0.5 font-mono text-[0.7rem] text-muted-foreground",
+												children: [
+													cs.teams.length,
+													" ",
+													cs.teams.length === 1 ? "team" : "teams"
+												]
+											})]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+											className: "font-display text-sm font-semibold text-foreground",
+											children: cs.title
+										})]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
+										animate: { rotate: isExpanded ? 180 : 0 },
+										transition: { duration: .2 },
+										className: "shrink-0 text-primary",
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronDown, { className: "h-5 w-5" })
+									})]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnimatePresence, { children: isExpanded && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+									initial: {
+										opacity: 0,
+										height: 0
+									},
+									animate: {
+										opacity: 1,
+										height: "auto"
+									},
+									exit: {
+										opacity: 0,
+										height: 0
+									},
+									transition: {
+										duration: .25,
+										ease: EASE$1
+									},
+									className: "border-t border-border/50 bg-background/60 p-4",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "block text-[0.65rem] font-mono uppercase tracking-widest text-muted-foreground mb-2",
+										children: [
+											"Assigned Teams (",
+											cs.teams.length,
+											"):"
+										]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "grid grid-cols-1 gap-2 sm:grid-cols-2",
+										children: cs.teams.map((teamName) => {
+											const tObj = ALL_TEAMS.find((team) => team.teamName === teamName);
+											return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex flex-col gap-1.5 rounded-lg border border-primary/30 bg-card p-3 font-mono text-xs text-foreground shadow-[0_0_15px_-8px_var(--gold)]",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex items-center justify-between gap-1",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+														className: "flex items-center gap-2 min-w-0",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-2 w-2 rounded-full bg-primary shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+															className: "font-semibold truncate",
+															children: teamName
+														})]
+													}), tObj && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+														className: `shrink-0 rounded px-1.5 py-0.5 text-[0.62rem] border ${tObj.group === 1 ? "border-purple-500/40 bg-purple-500/15 text-purple-300" : "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"}`,
+														children: tObj.group === 1 ? "G1: Ratan Tata" : "G2: MBA 107"
+													})]
+												}), tObj && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex items-center justify-between text-[0.68rem] text-muted-foreground pt-1 border-t border-border/40",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Slot:" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+														className: "text-foreground font-medium",
+														children: tObj.presentationTime
+													})]
+												})]
+											}, teamName);
+										})
+									})]
+								}) })]
+							}, cs.code);
+						})]
+					})
+				]
+			})
+		]
+	});
+}
+var supabaseUrl = "https://wotingreicdjvcebpvew.supabase.co";
+var supabaseAnonKey = "sb_publishable_Ozp513K60vo-oKQwlYOYPw_9OwTQs78";
+var isSupabaseConfigured = Boolean(supabaseUrl.startsWith("http") && !supabaseUrl.includes("your-project-url") && !supabaseUrl.includes("placeholder"));
+var supabase = createClient(isSupabaseConfigured ? supabaseUrl : "https://placeholder-project.supabase.co", isSupabaseConfigured ? supabaseAnonKey : "placeholder-anon-key");
+var LOCAL_STORAGE_KEY = "aavishkara_submissions_cache";
+function getLocalSubmissions() {
+	try {
+		const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+		return raw ? JSON.parse(raw) : [];
+	} catch {
+		return [];
+	}
+}
+function saveLocalSubmission(sub) {
+	try {
+		const updated = [sub, ...getLocalSubmissions().filter((s) => s.team_name !== sub.team_name)];
+		localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+	} catch (err) {
+		console.error("Local storage error:", err);
+	}
+}
+/**
+* Check if a team has already submitted
+*/
+async function checkExistingSubmission(teamName) {
+	if (!teamName) return { exists: false };
+	const raw = teamName.trim().toLowerCase();
+	const cleaned = raw.replace(/^team\s*\d+\s*[-–]\s*/i, "").trim();
+	const localMatch = getLocalSubmissions().find((s) => {
+		const sName = s.team_name.trim().toLowerCase();
+		const sCleaned = sName.replace(/^team\s*\d+\s*[-–]\s*/i, "").trim();
+		return sName === raw || sCleaned === cleaned || sName.includes(cleaned) || cleaned.includes(sCleaned);
+	});
+	if (isSupabaseConfigured) try {
+		const { data, error } = await supabase.from("submissions").select("*").or(`team_name.eq.${teamName},team_name.ilike.%${cleaned}%`).order("submitted_at", { ascending: false }).limit(1).maybeSingle();
+		if (error) {
+			console.warn("Supabase query error, falling back to local cache:", error);
+			return {
+				exists: Boolean(localMatch),
+				submission: localMatch
+			};
+		}
+		if (data) {
+			saveLocalSubmission(data);
+			return {
+				exists: true,
+				submission: data
+			};
+		}
+	} catch (err) {
+		console.warn("Supabase connection issue:", err);
+	}
+	return {
+		exists: Boolean(localMatch),
+		submission: localMatch
+	};
+}
+/**
+* Upload presentation file to Supabase Storage bucket `team-submissions`
+*/
+async function uploadPresentationFile(file, teamName) {
+	if (file.size > 52428800) return {
+		url: "",
+		error: `File size (${(file.size / 1048576).toFixed(1)}MB) exceeds maximum limit of 50MB.`
+	};
+	const allowedExtensions = [
+		"ppt",
+		"pptx",
+		"pdf"
+	];
+	const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
+	if (!allowedExtensions.includes(fileExt)) return {
+		url: "",
+		error: "Only .ppt, .pptx, and .pdf files are accepted."
+	};
+	const fileName = `${teamName.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase()}_${Date.now()}.${fileExt}`;
+	const filePath = `uploads/${fileName}`;
+	if (isSupabaseConfigured) try {
+		const { data: uploadData, error: uploadError } = await supabase.storage.from("team-submissions").upload(filePath, file, {
+			cacheControl: "3600",
+			upsert: true
+		});
+		if (uploadError) {
+			console.error("Storage upload error:", uploadError);
+			return {
+				url: "",
+				error: `Storage upload failed: ${uploadError.message}`
+			};
+		}
+		const { data: publicUrlData } = supabase.storage.from("team-submissions").getPublicUrl(uploadData?.path || filePath);
+		return { url: publicUrlData.publicUrl };
+	} catch (err) {
+		return {
+			url: "",
+			error: err instanceof Error ? err.message : "Upload error"
+		};
+	}
+	console.info("Demo Mode: Simulating file upload to team-submissions bucket");
+	return { url: `https://demo-storage.aavishkara26.org/team-submissions/${fileName}` };
+}
+/**
+* Insert record into `submissions` table
+*/
+async function submitProject(payload) {
+	const newRow = {
+		id: payload.id || crypto.randomUUID(),
+		team_name: payload.team_name,
+		case_study_code: payload.case_study_code,
+		case_study_title: payload.case_study_title,
+		github_link: payload.github_link,
+		ppt_file_url: payload.ppt_file_url,
+		submitted_at: payload.submitted_at || (/* @__PURE__ */ new Date()).toISOString()
+	};
+	if (isSupabaseConfigured) try {
+		const { data, error } = await supabase.from("submissions").insert({
+			team_name: payload.team_name,
+			case_study_code: payload.case_study_code,
+			case_study_title: payload.case_study_title,
+			github_link: payload.github_link,
+			ppt_file_url: payload.ppt_file_url
+		}).select().single();
+		if (error) {
+			console.error("Database submission error:", error);
+			return {
+				success: false,
+				error: error.message
+			};
+		}
+		saveLocalSubmission(data);
+		return {
+			success: true,
+			data
+		};
+	} catch (err) {
+		return {
+			success: false,
+			error: err instanceof Error ? err.message : "Database error"
+		};
+	}
+	saveLocalSubmission(newRow);
+	return {
+		success: true,
+		data: newRow
+	};
+}
+function SubmissionSection() {
+	const [selectedTeamName, setSelectedTeamName] = (0, import_react.useState)("");
+	const [githubLink, setGithubLink] = (0, import_react.useState)("");
+	const [file, setFile] = (0, import_react.useState)(null);
+	const [dragActive, setDragActive] = (0, import_react.useState)(false);
+	const [checkingExisting, setCheckingExisting] = (0, import_react.useState)(false);
+	const [existingSubmission, setExistingSubmission] = (0, import_react.useState)(null);
+	const [isUpdatingExisting, setIsUpdatingExisting] = (0, import_react.useState)(false);
+	const [submitting, setSubmitting] = (0, import_react.useState)(false);
+	const [submissionSuccess, setSubmissionSuccess] = (0, import_react.useState)(null);
+	const [errorMessage, setErrorMessage] = (0, import_react.useState)(null);
+	const fileInputRef = (0, import_react.useRef)(null);
+	const teamAssignment = selectedTeamName ? getTeamAssignment(selectedTeamName) : void 0;
+	(0, import_react.useEffect)(() => {
+		let isCancelled = false;
+		if (!selectedTeamName) {
+			setExistingSubmission(null);
+			return;
+		}
+		async function check() {
+			setCheckingExisting(true);
+			setErrorMessage(null);
+			const res = await checkExistingSubmission(selectedTeamName);
+			if (!isCancelled) {
+				if (res.exists && res.submission) setExistingSubmission(res.submission);
+				else setExistingSubmission(null);
+				setCheckingExisting(false);
+			}
+		}
+		check();
+		return () => {
+			isCancelled = true;
+		};
+	}, [selectedTeamName]);
+	const handleDrag = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+		else if (e.type === "dragleave") setDragActive(false);
+	};
+	const validateAndSetFile = (selectedFile) => {
+		const allowed = [
+			"ppt",
+			"pptx",
+			"pdf"
+		];
+		const ext = selectedFile.name.split(".").pop()?.toLowerCase() || "";
+		if (!allowed.includes(ext)) {
+			const err = "Invalid file type. Only .ppt, .pptx, and .pdf presentations are accepted.";
+			setErrorMessage(err);
+			toast.error(err);
+			return;
+		}
+		if (selectedFile.size > 52428800) {
+			const err = `File exceeds 50MB limit (${(selectedFile.size / 1048576).toFixed(1)}MB). Please compress your presentation.`;
+			setErrorMessage(err);
+			toast.error(err);
+			return;
+		}
+		setErrorMessage(null);
+		setFile(selectedFile);
+		playSound("click");
+		toast.success(`Presentation attached: ${selectedFile.name}`);
+	};
+	const handleDrop = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setDragActive(false);
+		if (e.dataTransfer.files && e.dataTransfer.files[0]) validateAndSetFile(e.dataTransfer.files[0]);
+	};
+	const handleFileChange = (e) => {
+		if (e.target.files && e.target.files[0]) validateAndSetFile(e.target.files[0]);
+	};
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		setErrorMessage(null);
+		if (!selectedTeamName || !teamAssignment) {
+			const err = "Please select your assigned Team Name.";
+			setErrorMessage(err);
+			toast.error(err);
+			return;
+		}
+		const trimmedGit = githubLink.trim();
+		if (!trimmedGit) {
+			const err = "GitHub repository URL is required.";
+			setErrorMessage(err);
+			toast.error(err);
+			return;
+		}
+		if (!trimmedGit.startsWith("https://github.com/")) {
+			const err = "GitHub link must start with https://github.com/";
+			setErrorMessage(err);
+			toast.error(err);
+			return;
+		}
+		if (!file) {
+			const err = "Please upload your presentation file (.ppt, .pptx, or .pdf).";
+			setErrorMessage(err);
+			toast.error(err);
+			return;
+		}
+		setSubmitting(true);
+		playSound("click");
+		try {
+			const uploadRes = await uploadPresentationFile(file, selectedTeamName);
+			if (uploadRes.error || !uploadRes.url) throw new Error(uploadRes.error || "Failed to upload presentation file.");
+			const subRes = await submitProject({
+				team_name: selectedTeamName,
+				case_study_code: teamAssignment.caseStudyCode,
+				case_study_title: teamAssignment.caseStudyTitle,
+				github_link: trimmedGit,
+				ppt_file_url: uploadRes.url
+			});
+			if (!subRes.success || !subRes.data) throw new Error(subRes.error || "Failed to record submission in database.");
+			setSubmissionSuccess(subRes.data);
+			setExistingSubmission(subRes.data);
+			setIsUpdatingExisting(false);
+			toast.success(`Submission received for ${selectedTeamName} — ${teamAssignment.caseStudyCode}!`);
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
+			setErrorMessage(msg);
+			toast.error(msg);
+		} finally {
+			setSubmitting(false);
+		}
+	};
+	const handleResetForm = () => {
+		setSelectedTeamName("");
+		setGithubLink("");
+		setFile(null);
+		setSubmissionSuccess(null);
+		setExistingSubmission(null);
+		setIsUpdatingExisting(false);
+		setErrorMessage(null);
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+		id: "submit-project",
+		className: "relative z-10 w-full px-4 py-24 sm:px-6 lg:px-10 overflow-hidden bg-background",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			"aria-hidden": true,
+			className: "pointer-events-none absolute -bottom-32 left-1/2 -translate-x-1/2 h-96 w-[60rem] bg-radial from-primary/10 via-neon/5 to-transparent blur-3xl"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "mx-auto max-w-4xl",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-col items-center text-center",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+						initial: {
+							opacity: 0,
+							y: 14
+						},
+						whileInView: {
+							opacity: 1,
+							y: 0
+						},
+						viewport: {
+							once: true,
+							amount: .5
+						},
+						transition: {
+							duration: .8,
+							ease: EASE$1
+						},
+						className: "flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-mono uppercase tracking-widest text-primary shadow-[0_0_15px_-4px_var(--gold)]",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Send, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Final Deliverable Submission" })]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.h2, {
+						initial: {
+							opacity: 0,
+							filter: "blur(10px)"
+						},
+						whileInView: {
+							opacity: 1,
+							filter: "blur(0px)"
+						},
+						viewport: {
+							once: true,
+							amount: .5
+						},
+						transition: {
+							duration: 1.2,
+							delay: .1,
+							ease: EASE$1
+						},
+						className: "display text-glow-gold mt-6 text-3xl sm:text-5xl md:text-6xl text-primary uppercase",
+						children: "Submit Your Project"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.p, {
+						initial: { opacity: 0 },
+						whileInView: { opacity: 1 },
+						viewport: {
+							once: true,
+							amount: .5
+						},
+						transition: {
+							duration: 1,
+							delay: .25
+						},
+						className: "mt-4 max-w-xl text-sm sm:text-base text-muted-foreground",
+						children: "Submit your team's code repository and presentation deck for final jury evaluation. All uploads are securely stored and timestamped."
+					})
+				]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "mt-12",
+				children: submissionSuccess ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+					initial: {
+						opacity: 0,
+						scale: .95
+					},
+					animate: {
+						opacity: 1,
+						scale: 1
+					},
+					transition: {
+						duration: .5,
+						ease: EASE$1
+					},
+					className: "rounded-2xl border border-primary/70 bg-card/90 p-8 sm:p-12 text-center shadow-[0_0_50px_-10px_var(--gold)] backdrop-blur-md",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "relative mx-auto flex h-24 w-24 items-center justify-center",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.span, {
+								className: "absolute inset-0 rounded-full border-2 border-primary/60",
+								animate: {
+									scale: [
+										1,
+										1.4,
+										1
+									],
+									opacity: [
+										.8,
+										0,
+										.8
+									]
+								},
+								transition: {
+									duration: 2.2,
+									repeat: Infinity,
+									ease: "easeOut"
+								}
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "flex h-20 w-20 items-center justify-center rounded-full bg-primary/20 border border-primary text-primary shadow-[0_0_30px_var(--gold)]",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "h-10 w-10 text-primary" })
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+							className: "display text-glow-gold mt-6 text-2xl sm:text-3xl text-primary font-bold",
+							children: "Submission Received!"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "mt-3 inline-block rounded-full bg-primary/15 border border-primary/30 px-4 py-1 font-mono text-sm text-foreground font-semibold",
+							children: [
+								submissionSuccess.team_name,
+								" • ",
+								submissionSuccess.case_study_code
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-3 text-sm text-muted-foreground max-w-md mx-auto",
+							children: "Your project submission has been recorded and safely preserved in the Aavishkara '26 cloud registry."
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "mx-auto mt-8 max-w-lg rounded-xl border border-border/80 bg-secondary/40 p-4 text-left font-mono text-xs space-y-2",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex justify-between border-b border-border/50 pb-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-muted-foreground",
+										children: "Case Study:"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "font-semibold text-foreground truncate max-w-[240px]",
+										children: submissionSuccess.case_study_title
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex justify-between border-b border-border/50 pb-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-muted-foreground",
+										children: "GitHub Repo:"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+										href: submissionSuccess.github_link,
+										target: "_blank",
+										rel: "noreferrer",
+										className: "text-primary hover:underline flex items-center gap-1 truncate max-w-[240px]",
+										children: [submissionSuccess.github_link, /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "h-3 w-3 shrink-0" })]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex justify-between border-b border-border/50 pb-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-muted-foreground",
+										children: "Presentation:"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+										href: submissionSuccess.ppt_file_url,
+										target: "_blank",
+										rel: "noreferrer",
+										className: "text-primary hover:underline flex items-center gap-1",
+										children: ["View File", /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "h-3 w-3 shrink-0" })]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex justify-between pt-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-muted-foreground",
+										children: "Submitted At:"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-foreground",
+										children: new Date(submissionSuccess.submitted_at).toLocaleString()
+									})]
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "mt-8 flex justify-center",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								onClick: handleResetForm,
+								className: "rounded-full border border-primary/50 bg-primary/10 px-6 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-primary hover:bg-primary/20 transition-colors cursor-pointer",
+								children: "Submit Another Project"
+							})
+						})
+					]
+				}) : existingSubmission && !isUpdatingExisting ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+					initial: {
+						opacity: 0,
+						y: 12
+					},
+					animate: {
+						opacity: 1,
+						y: 0
+					},
+					className: "rounded-2xl border border-primary/50 bg-card/85 p-8 sm:p-10 text-center shadow-[0_0_35px_-10px_var(--gold)] backdrop-blur-md",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 border border-primary/50 text-primary",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "h-8 w-8" })
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+							className: "display mt-5 text-2xl sm:text-3xl text-primary font-bold",
+							children: "You've Already Submitted"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "mt-2 font-mono text-sm text-muted-foreground",
+							children: [
+								"A verified project submission is already registered for",
+								" ",
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-foreground font-semibold",
+									children: existingSubmission.team_name
+								}),
+								"."
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "mx-auto mt-6 max-w-lg rounded-xl border border-border/80 bg-secondary/50 p-5 text-left font-mono text-xs space-y-3",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center justify-between border-b border-border/50 pb-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-muted-foreground",
+										children: "Assigned Challenge:"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "font-bold text-primary",
+										children: existingSubmission.case_study_code
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "border-b border-border/50 pb-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-muted-foreground block text-[0.7rem]",
+										children: "Title:"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-foreground font-medium",
+										children: existingSubmission.case_study_title
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center justify-between border-b border-border/50 pb-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-muted-foreground",
+										children: "GitHub Link:"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+										href: existingSubmission.github_link,
+										target: "_blank",
+										rel: "noreferrer",
+										className: "text-primary hover:underline flex items-center gap-1 font-medium truncate max-w-[240px]",
+										children: [existingSubmission.github_link, /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "h-3 w-3 shrink-0" })]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center justify-between border-b border-border/50 pb-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-muted-foreground",
+										children: "Presentation File:"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+										href: existingSubmission.ppt_file_url,
+										target: "_blank",
+										rel: "noreferrer",
+										className: "text-primary hover:underline flex items-center gap-1 font-medium",
+										children: ["Download / View", /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "h-3 w-3 shrink-0" })]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center justify-between pt-1 text-[0.7rem]",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-muted-foreground",
+										children: "Recorded Timestamp:"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-foreground",
+										children: new Date(existingSubmission.submitted_at).toLocaleString()
+									})]
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "mt-8 flex flex-wrap items-center justify-center gap-4",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => setIsUpdatingExisting(true),
+								className: "inline-flex items-center gap-2 rounded-full border border-primary/60 bg-primary/20 px-6 py-2.5 font-mono text-xs font-semibold tracking-wider text-primary hover:bg-primary/30 transition-colors cursor-pointer",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: "h-3.5 w-3.5" }), "Submit Revised Version"]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								onClick: handleResetForm,
+								className: "rounded-full border border-border bg-transparent px-5 py-2.5 font-mono text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer",
+								children: "Select Another Team"
+							})]
+						})
+					]
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+					onSubmit: handleSubmit,
+					className: "rounded-2xl border border-primary/35 bg-card/75 p-6 sm:p-10 shadow-[0_0_40px_-15px_rgba(0,0,0,0.8)] backdrop-blur-md space-y-8",
+					children: [
+						isUpdatingExisting && existingSubmission && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center justify-between rounded-lg border border-primary/40 bg-primary/10 p-3 text-xs font-mono text-primary",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["Updating submission for ", existingSubmission.team_name] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								onClick: () => setIsUpdatingExisting(false),
+								className: "text-muted-foreground hover:text-foreground underline cursor-pointer",
+								children: "Cancel"
+							})]
+						}),
+						errorMessage && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-start gap-3 rounded-xl border border-destructive/60 bg-destructive/10 p-4 text-xs font-mono text-destructive",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleAlert, { className: "h-4 w-4 shrink-0 mt-0.5" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "flex-1",
+									children: errorMessage
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+									type: "button",
+									onClick: () => setErrorMessage(null),
+									className: "cursor-pointer text-destructive hover:opacity-70",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "h-4 w-4" })
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "space-y-2",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+									htmlFor: "team-select",
+									className: "block font-mono text-xs uppercase tracking-widest text-primary font-bold",
+									children: ["1. Select Your Team ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-destructive",
+										children: "*"
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "relative",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+										id: "team-select",
+										value: selectedTeamName,
+										onChange: (e) => {
+											setSelectedTeamName(e.target.value);
+											playSound("click");
+										},
+										className: "w-full rounded-xl border border-border/80 bg-secondary/60 px-4 py-3.5 font-mono text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer transition-colors",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+											value: "",
+											disabled: true,
+											children: "-- Choose from 26 assigned teams --"
+										}), ALL_TEAMS.map((team) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", {
+											value: team.teamName,
+											children: [
+												team.teamName,
+												" — ",
+												team.caseStudyCode,
+												" (Group ",
+												team.group,
+												": ",
+												team.presentationHall,
+												" • ",
+												team.presentationTime,
+												")"
+											]
+										}, team.teamName))]
+									})
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "text-[0.7rem] font-mono text-muted-foreground",
+									children: "Your assigned challenge will be automatically locked and verified upon selection."
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "space-y-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block font-mono text-xs uppercase tracking-widest text-muted-foreground",
+								children: "2. Assigned Case Study (Auto-Verified)"
+							}), teamAssignment ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+								initial: {
+									opacity: 0,
+									y: 6
+								},
+								animate: {
+									opacity: 1,
+									y: 0
+								},
+								className: "rounded-xl border border-primary/60 bg-primary/10 p-4 sm:p-5 text-foreground shadow-[inset_0_0_20px_rgba(245,184,0,0.08)] space-y-3",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center justify-between gap-2 flex-wrap",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center gap-2",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "h-4 w-4 text-primary" }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "font-mono text-xs font-bold text-primary px-2 py-0.5 rounded bg-primary/20 border border-primary/40",
+												children: teamAssignment.caseStudyCode
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+												className: "flex items-center gap-1 text-[0.72rem] font-mono text-primary font-semibold",
+												children: [
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "h-3 w-3" }),
+													"Locked to ",
+													teamAssignment.teamName
+												]
+											})
+										]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center gap-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: `inline-flex items-center gap-1 rounded px-2 py-0.5 text-[0.68rem] font-mono border ${teamAssignment.group === 1 ? "border-purple-500/40 bg-purple-500/15 text-purple-300" : "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"}`,
+											children: [
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `h-1.5 w-1.5 rounded-full ${teamAssignment.group === 1 ? "bg-purple-400" : "bg-emerald-400"}` }),
+												"Group ",
+												teamAssignment.group,
+												" • ",
+												teamAssignment.presentationHall
+											]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "rounded bg-secondary/80 px-2 py-0.5 text-[0.68rem] font-mono text-muted-foreground border border-border/50",
+											children: teamAssignment.presentationTime
+										})]
+									})]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+									className: "font-display text-base sm:text-lg font-bold text-foreground",
+									children: teamAssignment.caseStudyTitle
+								})]
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "rounded-xl border border-dashed border-border/70 bg-card/40 p-4 text-center font-mono text-xs text-muted-foreground",
+								children: "Please select a team above to view your confirmed problem statement."
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "space-y-2",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+									htmlFor: "github-link",
+									className: "block font-mono text-xs uppercase tracking-widest text-primary font-bold",
+									children: ["3. GitHub Repository Link ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-destructive",
+										children: "*"
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "relative flex items-center",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "pointer-events-none absolute left-3.5 text-muted-foreground",
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Github, { className: "h-4 w-4" })
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										id: "github-link",
+										type: "url",
+										value: githubLink,
+										onChange: (e) => setGithubLink(e.target.value),
+										placeholder: "https://github.com/your-team/aavishkara-project",
+										required: true,
+										className: "w-full rounded-xl border border-border/80 bg-secondary/60 py-3.5 pl-10 pr-4 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+									className: "text-[0.7rem] font-mono text-muted-foreground",
+									children: [
+										"Must start with ",
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+											className: "text-primary font-semibold",
+											children: "https://github.com/"
+										}),
+										" and be publicly accessible."
+									]
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "space-y-2",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+									className: "block font-mono text-xs uppercase tracking-widest text-primary font-bold",
+									children: ["4. Presentation Deck (.ppt, .pptx, .pdf) ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-destructive",
+										children: "*"
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									ref: fileInputRef,
+									type: "file",
+									accept: ".ppt,.pptx,.pdf,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation",
+									onChange: handleFileChange,
+									className: "hidden",
+									id: "ppt-file-upload"
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									onDragEnter: handleDrag,
+									onDragLeave: handleDrag,
+									onDragOver: handleDrag,
+									onDrop: handleDrop,
+									onClick: () => fileInputRef.current?.click(),
+									className: `group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all duration-300 cursor-pointer ${dragActive ? "border-primary bg-primary/20 shadow-[0_0_30px_var(--gold)] scale-[1.01]" : file ? "border-primary/80 bg-primary/10 shadow-[0_0_20px_-5px_var(--gold)]" : "border-border/80 bg-secondary/40 hover:border-primary/60 hover:bg-secondary/60"}`,
+									children: file ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex flex-col items-center",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "flex h-14 w-14 items-center justify-center rounded-full bg-primary/20 text-primary border border-primary/50 shadow-[0_0_15px_var(--gold)]",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileText, { className: "h-7 w-7" })
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "mt-3 font-mono text-sm font-bold text-foreground",
+												children: file.name
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+												className: "mt-1 font-mono text-xs text-muted-foreground",
+												children: [(file.size / 1048576).toFixed(2), " MB • Ready for upload"]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: (e) => {
+													e.stopPropagation();
+													setFile(null);
+												},
+												className: "mt-4 rounded-full border border-destructive/50 bg-destructive/15 px-3 py-1 font-mono text-xs text-destructive hover:bg-destructive/30 transition-colors cursor-pointer",
+												children: "Remove / Replace File"
+											})
+										]
+									}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex flex-col items-center",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/30 group-hover:scale-110 group-hover:border-primary transition-transform",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudUpload, { className: "h-6 w-6" })
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "mt-3 font-display text-sm tracking-wider uppercase text-foreground",
+												children: "Drag & Drop Presentation Deck Here"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "mt-1 font-mono text-xs text-muted-foreground",
+												children: "or click to browse from device (Max 50MB)"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "mt-2 rounded bg-secondary px-2 py-0.5 font-mono text-[0.65rem] text-primary/80 border border-border",
+												children: "Supported formats: .pptx, .ppt, .pdf"
+											})
+										]
+									})
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "pt-4 flex flex-col items-center",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MagneticButton, {
+								type: "submit",
+								disabled: submitting || checkingExisting,
+								className: "w-full sm:w-auto min-w-[280px] justify-center",
+								children: submitting ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: "h-4 w-4 animate-spin" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Uploading & Submitting..." })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Send, { className: "h-4 w-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Submit Project Final" })] })
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-4 text-center font-mono text-[0.7rem] text-muted-foreground",
+								children: "By submitting, you confirm this work is original and complies with hackathon rules."
+							})]
+						})
+					]
+				})
+			})]
+		})]
+	});
+}
+var Toaster$1 = ({ ...props }) => {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Toaster, {
+		className: "toaster group",
+		toastOptions: { classNames: {
+			toast: "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
+			description: "group-[.toast]:text-muted-foreground",
+			actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+			cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground"
+		} },
+		...props
+	});
+};
 var titleCard = { url: "/aavishkara-title-card.png" };
 var akMark = { url: "/aavishkara-ak-mark.png" };
 var trustLogo = { url: "/soundarya-trust.png" };
@@ -4296,6 +6307,9 @@ function Reveal() {
 				})]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CaseStudyDeck, { studies: caseStudies }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TeamAssignmentsSection, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SubmissionSection, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Toaster$1, { position: "bottom-right" }),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Section, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.h2, {
 				initial: {
 					opacity: 0,

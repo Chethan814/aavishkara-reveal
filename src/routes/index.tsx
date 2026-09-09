@@ -18,6 +18,9 @@ import { EASE, HERO_LOGO_DELAY } from "@/lib/motion";
 import doorway from "@/assets/doorway.jpg";
 import { BootSequence } from "@/components/reveal/BootSequence";
 import { CinematicTeaser } from "@/components/reveal/CinematicTeaser";
+import { TeamAssignmentsSection } from "@/components/reveal/TeamAssignmentsSection";
+import { SubmissionSection } from "@/components/reveal/SubmissionSection";
+import { Toaster } from "@/components/ui/sonner";
 import { registerBootPreload } from "@/lib/boot-preload";
 
 /* Local paths served from public/ folder */
@@ -420,6 +423,15 @@ function Reveal() {
 
       {/* 5 — THE 20 CASE STUDIES (button-controlled) */}
       <CaseStudyDeck studies={caseStudies} />
+
+      {/* 5B — SECTION A: TEAM ASSIGNMENT REVEAL */}
+      <TeamAssignmentsSection />
+
+      {/* 5C — SECTION B: PROJECT SUBMISSION FORM */}
+      <SubmissionSection />
+
+      {/* Toast Notifications */}
+      <Toaster position="bottom-right" />
 
       {/* 6 — CLOSING */}
       <Section>
