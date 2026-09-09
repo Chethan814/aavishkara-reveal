@@ -43,7 +43,6 @@ export function SubmissionSection() {
 
   const [checkingExisting, setCheckingExisting] = useState<boolean>(false);
   const [existingSubmission, setExistingSubmission] = useState<SubmissionRow | null>(null);
-  const [isUpdatingExisting, setIsUpdatingExisting] = useState<boolean>(false);
 
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submissionSuccess, setSubmissionSuccess] = useState<SubmissionRow | null>(null);
@@ -224,7 +223,6 @@ export function SubmissionSection() {
       // Success
       setSubmissionSuccess(subRes.data);
       setExistingSubmission(subRes.data);
-      setIsUpdatingExisting(false);
       toast.success(
         `Submission received for ${selectedTeamName} — ${teamAssignment.caseStudyCode}!`
       );
@@ -246,7 +244,6 @@ export function SubmissionSection() {
     setFile(null);
     setSubmissionSuccess(null);
     setExistingSubmission(null);
-    setIsUpdatingExisting(false);
     setErrorMessage(null);
   };
 
@@ -392,102 +389,6 @@ export function SubmissionSection() {
                 </button>
               </div>
             </motion.div>
-          ) : existingSubmission && !isUpdatingExisting ? (
-            /* =============================================================== */
-            /* DUPLICATE DETECTION STATE ("You've Already Submitted")          */
-            /* =============================================================== */
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border border-primary/50 bg-card/85 p-8 sm:p-10 text-center shadow-[0_0_35px_-10px_var(--gold)] backdrop-blur-md"
-            >
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 border border-primary/50 text-primary">
-                <CheckCircle2 className="h-8 w-8" />
-              </div>
-
-              <h3 className="display mt-5 text-2xl sm:text-3xl text-primary font-bold">
-                You've Already Submitted
-              </h3>
-
-              <p className="mt-2 font-mono text-sm text-muted-foreground">
-                A verified project submission is already registered for{" "}
-                <span className="text-foreground font-semibold">{existingSubmission.team_name}</span>.
-              </p>
-
-              {/* Reference Card */}
-              <div className="mx-auto mt-6 max-w-lg rounded-xl border border-border/80 bg-secondary/50 p-5 text-left font-mono text-xs space-y-3">
-                {existingSubmission.project_name && (
-                  <div className="flex items-center justify-between border-b border-border/50 pb-2">
-                    <span className="text-muted-foreground">Project Name:</span>
-                    <span className="font-bold text-primary truncate max-w-[240px]">
-                      {existingSubmission.project_name}
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between border-b border-border/50 pb-2">
-                  <span className="text-muted-foreground">Assigned Challenge:</span>
-                  <span className="font-bold text-primary">
-                    {existingSubmission.case_study_code}
-                  </span>
-                </div>
-                <div className="border-b border-border/50 pb-2">
-                  <span className="text-muted-foreground block text-[0.7rem]">Title:</span>
-                  <span className="text-foreground font-medium">
-                    {existingSubmission.case_study_title}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between border-b border-border/50 pb-2">
-                  <span className="text-muted-foreground">GitHub Link:</span>
-                  <a
-                    href={existingSubmission.github_link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary hover:underline flex items-center gap-1 font-medium truncate max-w-[240px]"
-                  >
-                    {existingSubmission.github_link}
-                    <ExternalLink className="h-3 w-3 shrink-0" />
-                  </a>
-                </div>
-                <div className="flex items-center justify-between border-b border-border/50 pb-2">
-                  <span className="text-muted-foreground">Presentation File:</span>
-                  <a
-                    href={existingSubmission.ppt_file_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary hover:underline flex items-center gap-1 font-medium"
-                  >
-                    Download / View
-                    <ExternalLink className="h-3 w-3 shrink-0" />
-                  </a>
-                </div>
-                <div className="flex items-center justify-between pt-1 text-[0.7rem]">
-                  <span className="text-muted-foreground">Recorded Timestamp:</span>
-                  <span className="text-foreground">
-                    {new Date(existingSubmission.submitted_at).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => setIsUpdatingExisting(true)}
-                  className="inline-flex items-center gap-2 rounded-full border border-primary/60 bg-primary/20 px-6 py-2.5 font-mono text-xs font-semibold tracking-wider text-primary hover:bg-primary/30 transition-colors cursor-pointer"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  Submit Revised Version
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleResetForm}
-                  className="rounded-full border border-border bg-transparent px-5 py-2.5 font-mono text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                >
-                  Select Another Team
-                </button>
-              </div>
-            </motion.div>
           ) : (
             /* =============================================================== */
             /* SUBMISSION FORM                                                 */
@@ -496,19 +397,6 @@ export function SubmissionSection() {
               onSubmit={handleSubmit}
               className="rounded-2xl border border-primary/35 bg-card/75 p-6 sm:p-10 shadow-[0_0_40px_-15px_rgba(0,0,0,0.8)] backdrop-blur-md space-y-8"
             >
-              {/* Revision notification if updating */}
-              {isUpdatingExisting && existingSubmission && (
-                <div className="flex items-center justify-between rounded-lg border border-primary/40 bg-primary/10 p-3 text-xs font-mono text-primary">
-                  <span>Updating submission for {existingSubmission.team_name}</span>
-                  <button
-                    type="button"
-                    onClick={() => setIsUpdatingExisting(false)}
-                    className="text-muted-foreground hover:text-foreground underline cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
 
               {/* Error Message Box */}
               {errorMessage && (
