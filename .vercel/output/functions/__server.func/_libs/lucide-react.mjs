@@ -204,6 +204,21 @@ var CircleCheck = createLucideIcon("circle-check", [["circle", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Clock = createLucideIcon("clock", [["circle", {
+	cx: "12",
+	cy: "12",
+	r: "10",
+	key: "1mglay"
+}], ["path", {
+	d: "M12 6v6l4 2",
+	key: "mmk7yg"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var CloudUpload = createLucideIcon("cloud-upload", [
 	["path", {
 		d: "M12 13v8",
@@ -376,6 +391,21 @@ var Lock = createLucideIcon("lock", [["rect", {
 }], ["path", {
 	d: "M7 11V7a5 5 0 0 1 10 0v4",
 	key: "fwvmzm"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var MapPin = createLucideIcon("map-pin", [["path", {
+	d: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0",
+	key: "1r0f0z"
+}], ["circle", {
+	cx: "12",
+	cy: "10",
+	r: "3",
+	key: "ilqhr7"
 }]]);
 /**
 * @license lucide-react v0.575.0 - ISC
@@ -620,4 +650,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { CloudUpload as C, Check as D, ChevronDown as E, ArrowRight as O, Copy as S, CircleAlert as T, Grid3x3 as _, Users as a, FileText as b, SkipForward as c, Send as d, Search as f, Layers as g, Lock as h, Volume2 as i, ArrowLeft as k, ShieldCheck as l, Play as m, Wrench as n, Terminal as o, RefreshCw as p, VolumeX as r, Sparkles as s, X as t, ShieldAlert as u, Github as v, CircleCheck as w, ExternalLink as x, Funnel as y };
+export { ArrowRight as A, Copy as C, CircleAlert as D, CircleCheck as E, ChevronDown as O, ExternalLink as S, Clock as T, Layers as _, Users as a, Funnel as b, SkipForward as c, Send as d, Search as f, Lock as g, MapPin as h, Volume2 as i, ArrowLeft as j, Check as k, ShieldCheck as l, Play as m, Wrench as n, Terminal as o, RefreshCw as p, VolumeX as r, Sparkles as s, X as t, ShieldAlert as u, Grid3x3 as v, CloudUpload as w, FileText as x, Github as y };

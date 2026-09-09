@@ -20,6 +20,7 @@ import { BootSequence } from "@/components/reveal/BootSequence";
 import { CinematicTeaser } from "@/components/reveal/CinematicTeaser";
 import { TeamAssignmentsSection } from "@/components/reveal/TeamAssignmentsSection";
 import { SubmissionSection } from "@/components/reveal/SubmissionSection";
+import { ScheduleSection } from "@/components/reveal/ScheduleSection";
 import { Toaster } from "@/components/ui/sonner";
 import { registerBootPreload } from "@/lib/boot-preload";
 
@@ -429,6 +430,9 @@ function Reveal() {
 
       {/* 5C — SECTION B: PROJECT SUBMISSION FORM */}
       <SubmissionSection />
+
+      {/* 5D — SECTION C: PRESENTATION & PITCH SCHEDULE */}
+      <ScheduleSection />
 
       {/* Toast Notifications */}
       <Toaster position="bottom-right" />

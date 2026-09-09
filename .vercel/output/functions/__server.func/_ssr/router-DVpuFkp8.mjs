@@ -3,10 +3,10 @@ import { n as registerBootPreload, t as doorway_default } from "./boot-preload-C
 import { n as require_jsx_runtime, r as require_react, t as QueryClientProvider } from "../_libs/react+tanstack__react-query.mjs";
 import { _ as useRouter, c as HeadContent, d as Outlet, f as lazyRouteComponent, h as Link, m as createRootRouteWithContext, p as createFileRoute, s as Scripts, u as createRouter } from "../_libs/@tanstack/react-router+[...].mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-CPwO5wHd.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-DVpuFkp8.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-D8Ag0cgS.css";
+var styles_default = "/assets/styles-CveBd6Ce.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {
@@ -175,7 +175,7 @@ function RootComponent() {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {})
 	});
 }
-var $$splitComponentImporter = () => import("./routes-CyMbHkeh.mjs");
+var $$splitComponentImporter = () => import("./routes-izN0xz9a.mjs");
 registerBootPreload([
 	{ url: "/aavishkara-title-card.png" }.url,
 	{ url: "/aavishkara-ak-mark.png" }.url,
