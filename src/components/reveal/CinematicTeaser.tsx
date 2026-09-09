@@ -18,27 +18,48 @@ export function CinematicTeaser({ onDone, videoSrc = "/aavishkara-short.mp4" }: 
   const [showUnmuteHint, setShowUnmuteHint] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
-  // Attempt unmuted autoplay on mount
+  // Start muted (guaranteed autoplay), then unmute immediately for sound
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
-    v.muted = false;
+    // Start muted so autoplay always succeeds
+    v.muted = true;
     const playPromise = v.play();
     if (playPromise !== undefined) {
       playPromise
         .then(() => {
           setIsPlaying(true);
+          // Unmute immediately — works in most browsers after muted autoplay
+          v.muted = false;
+          v.volume = 1.0;
+          setMuted(false);
           setShowUnmuteHint(false);
         })
         .catch(() => {
-          // If browser policy blocked audio, fall back to muted autoplay and notify user
-          v.muted = true;
-          setMuted(true);
+          setIsPlaying(false);
           setShowUnmuteHint(true);
-          v.play().catch(() => setIsPlaying(false));
         });
     }
+
+    // Also try unmuting on first user click anywhere (covers strict browsers)
+    const handleFirstClick = () => {
+      if (v.muted) {
+        v.muted = false;
+        v.volume = 1.0;
+        setMuted(false);
+        setShowUnmuteHint(false);
+        if (v.paused) v.play().catch(() => {});
+      }
+      document.removeEventListener('click', handleFirstClick);
+      document.removeEventListener('touchstart', handleFirstClick);
+    };
+    document.addEventListener('click', handleFirstClick, { once: true });
+    document.addEventListener('touchstart', handleFirstClick, { once: true });
+    return () => {
+      document.removeEventListener('click', handleFirstClick);
+      document.removeEventListener('touchstart', handleFirstClick);
+    };
   }, []);
 
   const handleTimeUpdate = () => {

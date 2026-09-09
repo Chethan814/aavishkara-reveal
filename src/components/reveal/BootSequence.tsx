@@ -114,7 +114,23 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
   }, [visible]);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoContainerRef = useRef<HTMLDivElement | null>(null);
   const [muted, setMuted] = useState(false);
+
+  /** Prime video for unmuted playback — call during a real user gesture */
+  const primeVideo = useCallback(() => {
+    const v = videoRef.current;
+    if (!v || activeRef.current) return;
+    v.muted = false;
+    v.volume = 1.0;
+    const p = v.play();
+    if (p) {
+      p.then(() => {
+        v.pause();
+        v.currentTime = 0;
+      }).catch(() => {});
+    }
+  }, []);
   const [videoDuration, setVideoDuration] = useState(20);
   const [currentTime, setCurrentTime] = useState(0);
 
@@ -176,18 +192,19 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
       points.forEach((p) => addRipple(p.x, p.y, true));
       setStatus("BIOMETRIC ACCESS GRANTED // INITIALIZING");
 
-      // Auto-play the 20-second video as the loading transmission
-      setTimeout(() => {
-        const v = videoRef.current;
-        if (v) {
-          v.muted = false;
-          v.play().catch(() => {
-            v.muted = true;
-            setMuted(true);
-            v.play().catch(() => {});
-          });
-        }
-      }, 50);
+      // Play the primed video with sound
+      const v = videoRef.current;
+      if (v) {
+        v.muted = false;
+        v.volume = 1.0;
+        v.currentTime = 0;
+        v.play().catch(() => {
+          // If browser still blocks unmuted play, fall back to muted
+          v.muted = true;
+          setMuted(true);
+          v.play().catch(() => {});
+        });
+      }
     },
     [addRipple],
   );
@@ -245,6 +262,7 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
         y: t.clientY,
       }));
       setActiveTouches(touches);
+      primeVideo();
 
       touches.forEach((t) => addRipple(t.x, t.y, false));
 
@@ -309,6 +327,7 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
       if (activeRef.current) return;
       const pt = { id: 999, x: e.clientX, y: e.clientY };
       setActiveTouches([pt]);
+      primeVideo();
       addRipple(e.clientX, e.clientY, false);
       cancelCharge();
       startCharge([pt], HOLD_FALLBACK_DURATION);
@@ -358,6 +377,14 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
   );
 
   if (!visible) return null;
+
+  /* Move video element into the video container when it becomes active */
+  const videoContainerCallback = useCallback((node: HTMLDivElement | null) => {
+    videoContainerRef.current = node;
+    if (node && videoRef.current) {
+      node.prepend(videoRef.current);
+    }
+  }, []);
 
   const finale = active && progress > 86;
   const activeCount = lockedFingers.filter(Boolean).length;
@@ -725,17 +752,9 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
             </div>
 
             {/* Video Player */}
-            <div className="relative mt-3 aspect-video w-full overflow-hidden rounded-lg border border-primary/40 bg-black shadow-[0_0_40px_rgba(218,165,32,0.2)]">
-              <video
-                ref={videoRef}
-                src="/aavishkara-short.mp4"
-                playsInline
-                autoPlay
-                onTimeUpdate={handleTimeUpdate}
-                onEnded={finishBoot}
-                className="h-full w-full object-contain"
-              />
-              <div className="pointer-events-none absolute inset-0 opacity-15 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:100%_4px]" />
+            <div ref={videoContainerCallback} className="relative mt-3 aspect-video w-full overflow-hidden rounded-lg border border-primary/40 bg-black shadow-[0_0_40px_rgba(218,165,32,0.2)]">
+              {/* Video element gets moved here via ref callback when active */}
+              <div className="pointer-events-none absolute inset-0 z-10 opacity-15 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:100%_4px]" />
             </div>
 
             {/* Footer Progress Bar */}
@@ -756,6 +775,27 @@ export function BootSequence({ onDone }: { onDone: (fromScan?: boolean) => void 
           </div>
         )}
       </div>
+
+      {/* Video element — always in DOM so it can be primed during user gestures.
+          Moves into the video container via ref callback when active. Hidden off-screen otherwise. */}
+      <video
+        ref={videoRef}
+        src="/aavishkara-short.mp4"
+        playsInline
+        preload="auto"
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={finishBoot}
+        className="h-full w-full object-contain"
+        style={!active ? {
+          position: 'fixed',
+          top: -9999,
+          left: -9999,
+          width: 0,
+          height: 0,
+          opacity: 0,
+          pointerEvents: 'none',
+        } : undefined}
+      />
 
       {/* RIPPLE EFFECTS */}
       {ripples.map((r) => (

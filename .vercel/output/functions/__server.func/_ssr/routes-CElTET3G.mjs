@@ -5,7 +5,7 @@ import { a as AnimatePresence, n as useMotionValue, r as useScroll, t as useSpri
 import { t as motion } from "../_libs/motion.mjs";
 import { _ as ChevronDown, a as Terminal, b as ArrowLeft, c as ShieldCheck, d as Play, f as Lock, g as Copy, h as Funnel, i as Volume2, l as ShieldAlert, m as Grid3x3, n as Wrench, o as Sparkles, p as Layers, r as VolumeX, s as SkipForward, t as X, u as Search, v as Check, y as ArrowRight } from "../_libs/lucide-react.mjs";
 import { t as Lenis } from "../_libs/lenis.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-B1xYp5cX.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-CElTET3G.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function SmoothScroll() {
@@ -2784,7 +2784,20 @@ function BootSequence({ onDone }) {
 		warmBootPreload();
 	}, [visible]);
 	const videoRef = (0, import_react.useRef)(null);
+	const videoContainerRef = (0, import_react.useRef)(null);
 	const [muted, setMuted] = (0, import_react.useState)(false);
+	/** Prime video for unmuted playback — call during a real user gesture */
+	const primeVideo = (0, import_react.useCallback)(() => {
+		const v = videoRef.current;
+		if (!v || activeRef.current) return;
+		v.muted = false;
+		v.volume = 1;
+		const p = v.play();
+		if (p) p.then(() => {
+			v.pause();
+			v.currentTime = 0;
+		}).catch(() => {});
+	}, []);
 	const [videoDuration, setVideoDuration] = (0, import_react.useState)(20);
 	const [currentTime, setCurrentTime] = (0, import_react.useState)(0);
 	const finishBoot = (0, import_react.useCallback)(() => {
@@ -2846,17 +2859,17 @@ function BootSequence({ onDone }) {
 		]);
 		points.forEach((p) => addRipple(p.x, p.y, true));
 		setStatus("BIOMETRIC ACCESS GRANTED // INITIALIZING");
-		setTimeout(() => {
-			const v = videoRef.current;
-			if (v) {
-				v.muted = false;
-				v.play().catch(() => {
-					v.muted = true;
-					setMuted(true);
-					v.play().catch(() => {});
-				});
-			}
-		}, 50);
+		const v = videoRef.current;
+		if (v) {
+			v.muted = false;
+			v.volume = 1;
+			v.currentTime = 0;
+			v.play().catch(() => {
+				v.muted = true;
+				setMuted(true);
+				v.play().catch(() => {});
+			});
+		}
 	}, [addRipple]);
 	const updateFingerStates = (0, import_react.useCallback)((touchesCount, currentCharge) => {
 		const chargeLocked = Math.min(5, Math.floor(currentCharge * 5.5));
@@ -2900,6 +2913,7 @@ function BootSequence({ onDone }) {
 				y: t.clientY
 			}));
 			setActiveTouches(touches);
+			primeVideo();
 			touches.forEach((t) => addRipple(t.x, t.y, false));
 			const fingerCount = touches.length;
 			updateFingerStates(fingerCount, 0);
@@ -2957,6 +2971,7 @@ function BootSequence({ onDone }) {
 				y: e.clientY
 			};
 			setActiveTouches([pt]);
+			primeVideo();
 			addRipple(e.clientX, e.clientY, false);
 			cancelCharge();
 			startCharge([pt], HOLD_FALLBACK_DURATION);
@@ -3013,6 +3028,10 @@ function BootSequence({ onDone }) {
 		cancelAnimationFrame(chargeRaf.current);
 	}, []);
 	if (!visible) return null;
+	const videoContainerCallback = (0, import_react.useCallback)((node) => {
+		videoContainerRef.current = node;
+		if (node && videoRef.current) node.prepend(videoRef.current);
+	}, []);
 	const finale = active && progress > 86;
 	const activeCount = lockedFingers.filter(Boolean).length;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -3467,17 +3486,10 @@ function BootSequence({ onDone }) {
 								})]
 							})]
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							ref: videoContainerCallback,
 							className: "relative mt-3 aspect-video w-full overflow-hidden rounded-lg border border-primary/40 bg-black shadow-[0_0_40px_rgba(218,165,32,0.2)]",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("video", {
-								ref: videoRef,
-								src: "/aavishkara-short.mp4",
-								playsInline: true,
-								autoPlay: true,
-								onTimeUpdate: handleTimeUpdate,
-								onEnded: finishBoot,
-								className: "h-full w-full object-contain"
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute inset-0 opacity-15 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:100%_4px]" })]
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute inset-0 z-10 opacity-15 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:100%_4px]" })
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "mt-3.5 flex items-center gap-4",
@@ -3506,6 +3518,24 @@ function BootSequence({ onDone }) {
 					]
 				})
 			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("video", {
+				ref: videoRef,
+				src: "/aavishkara-short.mp4",
+				playsInline: true,
+				preload: "auto",
+				onTimeUpdate: handleTimeUpdate,
+				onEnded: finishBoot,
+				className: "h-full w-full object-contain",
+				style: !active ? {
+					position: "fixed",
+					top: -9999,
+					left: -9999,
+					width: 0,
+					height: 0,
+					opacity: 0,
+					pointerEvents: "none"
+				} : void 0
+			}),
 			ripples.map((r) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 				"aria-hidden": true,
 				className: r.big ? "boot-ripple boot-ripple-big" : "boot-ripple",
@@ -3529,17 +3559,35 @@ function CinematicTeaser({ onDone, videoSrc = "/aavishkara-short.mp4" }) {
 	(0, import_react.useEffect)(() => {
 		const v = videoRef.current;
 		if (!v) return;
-		v.muted = false;
+		v.muted = true;
 		const playPromise = v.play();
 		if (playPromise !== void 0) playPromise.then(() => {
 			setIsPlaying(true);
+			v.muted = false;
+			v.volume = 1;
+			setMuted(false);
 			setShowUnmuteHint(false);
 		}).catch(() => {
-			v.muted = true;
-			setMuted(true);
+			setIsPlaying(false);
 			setShowUnmuteHint(true);
-			v.play().catch(() => setIsPlaying(false));
 		});
+		const handleFirstClick = () => {
+			if (v.muted) {
+				v.muted = false;
+				v.volume = 1;
+				setMuted(false);
+				setShowUnmuteHint(false);
+				if (v.paused) v.play().catch(() => {});
+			}
+			document.removeEventListener("click", handleFirstClick);
+			document.removeEventListener("touchstart", handleFirstClick);
+		};
+		document.addEventListener("click", handleFirstClick, { once: true });
+		document.addEventListener("touchstart", handleFirstClick, { once: true });
+		return () => {
+			document.removeEventListener("click", handleFirstClick);
+			document.removeEventListener("touchstart", handleFirstClick);
+		};
 	}, []);
 	const handleTimeUpdate = () => {
 		const v = videoRef.current;
