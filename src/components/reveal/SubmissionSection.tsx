@@ -12,6 +12,7 @@ import {
   Lock,
   RefreshCw,
   Send,
+  Shield,
   Sparkles,
   UploadCloud,
   X,
@@ -36,6 +37,10 @@ export function SubmissionSection() {
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState<boolean>(false);
 
+  const [securityCode, setSecurityCode] = useState<string>("");
+  const [projectName, setProjectName] = useState<string>("");
+  const [projectDescription, setProjectDescription] = useState<string>("");
+
   const [checkingExisting, setCheckingExisting] = useState<boolean>(false);
   const [existingSubmission, setExistingSubmission] = useState<SubmissionRow | null>(null);
   const [isUpdatingExisting, setIsUpdatingExisting] = useState<boolean>(false);
@@ -48,6 +53,7 @@ export function SubmissionSection() {
 
   // Selected team assignment details
   const teamAssignment = selectedTeamName ? getTeamAssignment(selectedTeamName) : undefined;
+  const expectedSecurityCode = teamAssignment ? String(teamAssignment.teamNumber).padStart(2, "0") : "";
 
   // Check duplicate submission whenever a team is chosen
   useEffect(() => {
@@ -65,6 +71,9 @@ export function SubmissionSection() {
       if (!isCancelled) {
         if (res.exists && res.submission) {
           setExistingSubmission(res.submission);
+          if (res.submission.project_name) setProjectName(res.submission.project_name);
+          if (res.submission.project_description) setProjectDescription(res.submission.project_description);
+          if (res.submission.github_link) setGithubLink(res.submission.github_link);
         } else {
           setExistingSubmission(null);
         }
@@ -141,6 +150,29 @@ export function SubmissionSection() {
       return;
     }
 
+    const trimmedCode = securityCode.trim();
+    if (!trimmedCode) {
+      const err = "Please enter your 2-digit Security Code.";
+      setErrorMessage(err);
+      toast.error(err);
+      return;
+    }
+
+    if (trimmedCode !== expectedSecurityCode) {
+      const err = "Invalid Security Code for the selected team.";
+      setErrorMessage(err);
+      toast.error(err);
+      return;
+    }
+
+    const trimmedProjectName = projectName.trim();
+    if (!trimmedProjectName) {
+      const err = "Project Name is required.";
+      setErrorMessage(err);
+      toast.error(err);
+      return;
+    }
+
     const trimmedGit = githubLink.trim();
     if (!trimmedGit) {
       const err = "GitHub repository URL is required.";
@@ -179,6 +211,8 @@ export function SubmissionSection() {
         team_name: selectedTeamName,
         case_study_code: teamAssignment.caseStudyCode,
         case_study_title: teamAssignment.caseStudyTitle,
+        project_name: trimmedProjectName,
+        project_description: projectDescription.trim(),
         github_link: trimmedGit,
         ppt_file_url: uploadRes.url,
       });
@@ -205,6 +239,9 @@ export function SubmissionSection() {
 
   const handleResetForm = () => {
     setSelectedTeamName("");
+    setSecurityCode("");
+    setProjectName("");
+    setProjectDescription("");
     setGithubLink("");
     setFile(null);
     setSubmissionSuccess(null);
@@ -299,6 +336,14 @@ export function SubmissionSection() {
 
               {/* Submission summary card */}
               <div className="mx-auto mt-8 max-w-lg rounded-xl border border-border/80 bg-secondary/40 p-4 text-left font-mono text-xs space-y-2">
+                {submissionSuccess.project_name && (
+                  <div className="flex justify-between border-b border-border/50 pb-2">
+                    <span className="text-muted-foreground">Project Name:</span>
+                    <span className="font-bold text-primary truncate max-w-[240px]">
+                      {submissionSuccess.project_name}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between border-b border-border/50 pb-2">
                   <span className="text-muted-foreground">Case Study:</span>
                   <span className="font-semibold text-foreground truncate max-w-[240px]">
@@ -371,6 +416,14 @@ export function SubmissionSection() {
 
               {/* Reference Card */}
               <div className="mx-auto mt-6 max-w-lg rounded-xl border border-border/80 bg-secondary/50 p-5 text-left font-mono text-xs space-y-3">
+                {existingSubmission.project_name && (
+                  <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                    <span className="text-muted-foreground">Project Name:</span>
+                    <span className="font-bold text-primary truncate max-w-[240px]">
+                      {existingSubmission.project_name}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between border-b border-border/50 pb-2">
                   <span className="text-muted-foreground">Assigned Challenge:</span>
                   <span className="font-bold text-primary">
@@ -505,10 +558,76 @@ export function SubmissionSection() {
                 </p>
               </div>
 
-              {/* 2. Auto-Displayed Read-Only Assigned Case Study Field */}
+              {/* 2. Security Code Field */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="security-code"
+                  className="block font-mono text-xs uppercase tracking-widest text-primary font-bold"
+                >
+                  2. Security Code <span className="text-destructive">*</span>
+                </label>
+                <div className="relative flex items-center">
+                  <div className="pointer-events-none absolute left-3.5 text-muted-foreground">
+                    <Shield className="h-4 w-4 text-primary" />
+                  </div>
+                  <input
+                    id="security-code"
+                    type="password"
+                    maxLength={2}
+                    value={securityCode}
+                    onChange={(e) => setSecurityCode(e.target.value)}
+                    placeholder="Enter 2-digit security code"
+                    required
+                    className="w-full rounded-xl border border-border/80 bg-secondary/60 py-3.5 pl-10 pr-4 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                  />
+                </div>
+                <p className="text-[0.7rem] font-mono text-muted-foreground">
+                  Enter your team's assigned 2-digit authorization code to submit or update project deliverables.
+                </p>
+              </div>
+
+              {/* 3. Project Name & Description Fields */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="project-name"
+                    className="block font-mono text-xs uppercase tracking-widest text-primary font-bold"
+                  >
+                    3. Project Name <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    id="project-name"
+                    type="text"
+                    value={projectName}
+                    onChange={(e) => setProjectName(e.target.value)}
+                    placeholder="Enter your official project / solution name"
+                    required
+                    className="w-full rounded-xl border border-border/80 bg-secondary/60 px-4 py-3.5 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="project-description"
+                    className="block font-mono text-xs uppercase tracking-widest text-muted-foreground font-bold"
+                  >
+                    Project Summary / Description
+                  </label>
+                  <textarea
+                    id="project-description"
+                    rows={3}
+                    value={projectDescription}
+                    onChange={(e) => setProjectDescription(e.target.value)}
+                    placeholder="Briefly describe your team's solution, core tech stack, and key features..."
+                    className="w-full rounded-xl border border-border/80 bg-secondary/60 px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* 4. Auto-Displayed Read-Only Assigned Case Study Field */}
               <div className="space-y-2">
                 <label className="block font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                  2. Assigned Case Study (Auto-Verified)
+                  4. Assigned Case Study (Auto-Verified)
                 </label>
                 {teamAssignment ? (
                   <motion.div
@@ -560,13 +679,13 @@ export function SubmissionSection() {
                 )}
               </div>
 
-              {/* 3. GitHub Link Input */}
+              {/* 5. GitHub Link Input */}
               <div className="space-y-2">
                 <label
                   htmlFor="github-link"
                   className="block font-mono text-xs uppercase tracking-widest text-primary font-bold"
                 >
-                  3. GitHub Repository Link <span className="text-destructive">*</span>
+                  5. GitHub Repository Link <span className="text-destructive">*</span>
                 </label>
                 <div className="relative flex items-center">
                   <div className="pointer-events-none absolute left-3.5 text-muted-foreground">
@@ -587,10 +706,10 @@ export function SubmissionSection() {
                 </p>
               </div>
 
-              {/* 4. PPT Presentation File Upload Zone */}
+              {/* 6. PPT Presentation File Upload Zone */}
               <div className="space-y-2">
                 <label className="block font-mono text-xs uppercase tracking-widest text-primary font-bold">
-                  4. Presentation Deck (.ppt, .pptx, .pdf) <span className="text-destructive">*</span>
+                  6. Presentation Deck (.ppt, .pptx, .pdf) <span className="text-destructive">*</span>
                 </label>
 
                 <input

@@ -15,6 +15,8 @@ export interface Database {
           team_name: string;
           case_study_code: string;
           case_study_title: string;
+          project_name?: string | undefined;
+          project_description?: string | undefined;
           github_link: string;
           ppt_file_url: string;
           submitted_at: string;
@@ -24,6 +26,8 @@ export interface Database {
           team_name: string;
           case_study_code: string;
           case_study_title: string;
+          project_name?: string | undefined;
+          project_description?: string | undefined;
           github_link: string;
           ppt_file_url: string;
           submitted_at?: string;
@@ -33,6 +37,8 @@ export interface Database {
           team_name?: string;
           case_study_code?: string;
           case_study_title?: string;
+          project_name?: string | undefined;
+          project_description?: string | undefined;
           github_link?: string;
           ppt_file_url?: string;
           submitted_at?: string;

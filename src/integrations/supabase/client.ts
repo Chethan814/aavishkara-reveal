@@ -142,6 +142,8 @@ export async function submitProject(payload: {
   team_name: string;
   case_study_code: string;
   case_study_title: string;
+  project_name?: string;
+  project_description?: string;
   github_link: string;
   ppt_file_url: string;
   submitted_at?: string;
@@ -151,6 +153,8 @@ export async function submitProject(payload: {
     team_name: payload.team_name,
     case_study_code: payload.case_study_code,
     case_study_title: payload.case_study_title,
+    project_name: payload.project_name,
+    project_description: payload.project_description,
     github_link: payload.github_link,
     ppt_file_url: payload.ppt_file_url,
     submitted_at: payload.submitted_at || new Date().toISOString(),
@@ -164,6 +168,8 @@ export async function submitProject(payload: {
           team_name: payload.team_name,
           case_study_code: payload.case_study_code,
           case_study_title: payload.case_study_title,
+          project_name: payload.project_name,
+          project_description: payload.project_description,
           github_link: payload.github_link,
           ppt_file_url: payload.ppt_file_url,
         })
